@@ -8,11 +8,15 @@ export default function AuthShell({ subtitle, children }: { subtitle: string; ch
     <main className="flex min-h-dvh flex-col items-center justify-center px-5 py-10">
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-accent-soft font-brand text-4xl text-accent-strong">
-            E
-          </div>
-          <h1 className="font-brand text-3xl tracking-wide">{t.appName}</h1>
-          <p className="mt-1 text-sm text-muted">{subtitle}</p>
+          <img
+            src="/brand/logo-badge.png"
+            alt=""
+            width={176}
+            height={176}
+            className="mx-auto mb-3 h-44 w-44 rounded-full shadow-sm ring-1 ring-line"
+          />
+          <h1 className="sr-only">{t.appName}</h1>
+          <p className="text-sm text-muted">{subtitle}</p>
         </div>
         <div className="card p-6">{children}</div>
         <Credit className="mt-6 text-center" />

@@ -32,5 +32,5 @@ export async function middleware(req: NextRequest) {
 export const config = {
   // Everything except Next internals and the public PWA files (manifest,
   // icons) which the browser fetches without a session.
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|icons/|apple-touch-icon.png).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|icons/|brand/|apple-touch-icon.png).*)"],
 };
