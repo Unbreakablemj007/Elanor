@@ -17,8 +17,10 @@ export function supabaseEnv(): { url: string; key: string } {
 }
 
 async function create() {
-  const { url, key } = supabaseEnv();
+  // Read cookies first: it marks the page as dynamic, so a missing env var
+  // fails at request time with a clear message instead of breaking the build.
   const cookieStore = await cookies();
+  const { url, key } = supabaseEnv();
   return createServerClient(url, key, {
     cookies: {
       getAll() {
