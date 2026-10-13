@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { PlusIcon, TrashIcon } from "@/components/icons";
+import ImageUpload from "@/components/ImageUpload";
 import { ErrorBox } from "@/components/ui";
 import { formatUsd, parseNumber } from "@/lib/format";
 import { t } from "@/lib/strings";
@@ -60,6 +61,7 @@ export default function ProductForm({
   const [cost, setCost] = useState(initial ? String(initial.cost_price_usd) : "");
   const [price, setPrice] = useState(initial ? String(initial.sell_price_usd) : "");
   const [imageUrl, setImageUrl] = useState(initial?.image_url ?? "");
+  const [uploading, setUploading] = useState(false);
   const [rows, setRows] = useState<VariantRow[]>(() =>
     initial?.variants.length
       ? initial.variants.map((v) => ({
@@ -165,12 +167,7 @@ export default function ProductForm({
           </label>
           <textarea id="description" className="input min-h-20 py-2" value={description} onChange={(e) => setDescription(e.target.value)} maxLength={1000} />
         </div>
-        <div>
-          <label className="label" htmlFor="image">
-            {t.products.imageUrl} <span className="font-normal">({t.common.optional})</span>
-          </label>
-          <input id="image" className="input" type="url" inputMode="url" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://…" />
-        </div>
+        <ImageUpload value={imageUrl} onChange={setImageUrl} onBusyChange={setUploading} />
       </section>
 
       <section className="card space-y-3">
@@ -241,7 +238,7 @@ export default function ProductForm({
 
       {error && <ErrorBox>{error}</ErrorBox>}
       <div className="sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-10 lg:bottom-4">
-        <button type="submit" className="btn-primary w-full shadow-lg" disabled={pending}>
+        <button type="submit" className="btn-primary w-full shadow-lg" disabled={pending || uploading}>
           {pending ? t.common.saving : t.common.save}
         </button>
       </div>

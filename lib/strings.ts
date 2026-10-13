@@ -290,6 +290,18 @@ export const t = {
     submit: "Save new password",
   },
 
+  photo: {
+    label: "Photo",
+    add: "Take or choose photo",
+    change: "Change photo",
+    remove: "Remove photo",
+    uploading: "Uploading…",
+    help: "Use the camera or pick from the gallery. Photos are resized automatically.",
+    notImage: "That file is not a photo.",
+    unreadable: "This photo format could not be read. Try a JPG or PNG, or take the photo again.",
+    failed: "The photo could not be uploaded. Check the connection and try again.",
+  },
+
   credit: {
     prefix: "Developed by",
     name: "MJ Automations",

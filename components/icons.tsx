@@ -124,3 +124,9 @@ export const SheetIcon = (p: IconProps) => (
     <path d="M4 9h16M4 15h16M10 9v12" />
   </Svg>
 );
+export const CameraIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M4 8h3l2-3h6l2 3h3v11H4z" />
+    <circle cx="12" cy="13" r="3.5" />
+  </Svg>
+);
