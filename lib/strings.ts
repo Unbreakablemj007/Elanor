@@ -197,6 +197,12 @@ export const t = {
 
   sales: {
     title: "Sales",
+    deleteSale: "Delete sale",
+    deleteTitle: "Delete this sale?",
+    deleteConfirm: (id: string) => `${id} will be removed from sales history and reports. This cannot be undone.`,
+    deleteRestock: (n: number) => `${n} piece${n === 1 ? "" : "s"} not yet returned will go back to stock.`,
+    deleteConfirmLabel: "Delete",
+    deletedNote: "Sale deleted",
     empty: "No sales in this date range.",
     status: {
       completed: "Completed",

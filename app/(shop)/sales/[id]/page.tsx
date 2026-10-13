@@ -6,6 +6,7 @@ import { formatInt, formatLbp, formatUsd } from "@/lib/format";
 import { saleNet, statusTone } from "@/lib/reports";
 import { getCustomer, getSale, listItemsForSale } from "@/lib/db";
 import { t } from "@/lib/strings";
+import DeleteSaleButton from "./DeleteSaleButton";
 import ReturnForm from "./ReturnForm";
 
 export default async function SalePage({ params }: { params: Promise<{ id: string }> }) {
@@ -77,6 +78,12 @@ export default async function SalePage({ params }: { params: Promise<{ id: strin
           {sale.status !== "completed" && <Row label={t.dashboard.revenue}>{formatUsd(net.revenue)}</Row>}
           <Row label={t.sales.createdBy}>{sale.created_by || "—"}</Row>
           {sale.notes && <p className="border-t border-line pt-3 whitespace-pre-line text-muted">{sale.notes}</p>}
+          <div className="border-t border-line pt-3">
+            <DeleteSaleButton
+              saleId={sale.sale_id}
+              unreturned={items.reduce((n, i) => n + Math.max(0, i.qty - i.returned_qty), 0)}
+            />
+          </div>
         </section>
       </div>
     </>
