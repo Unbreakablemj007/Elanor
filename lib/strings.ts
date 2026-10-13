@@ -270,6 +270,23 @@ export const t = {
     signedInAs: (u: string) => `Signed in as ${u}`,
   },
 
+  password: {
+    title: "Change password",
+    current: "Current password",
+    new: "New password",
+    confirm: "Repeat new password",
+    help: "At least 8 characters.",
+    submit: "Change password",
+    saved: "Password changed. Use the new one next time you sign in.",
+    mismatch: "The two new passwords do not match.",
+    currentRequired: "Enter your current password.",
+    tooShort: "The new password must be at least 8 characters.",
+    tooLong: "The new password must be at most 72 characters.",
+    same: "The new password is the same as the current one.",
+    wrongCurrent: "The current password is wrong.",
+    weak: "That password is too easy to guess. Choose a stronger one.",
+  },
+
   errors: {
     stockChanged: (label: string, available: number) =>
       `Only ${available} left of ${label}. Please update the cart.`,
