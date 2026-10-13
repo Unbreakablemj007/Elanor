@@ -1,9 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/auth/session";
+import { isKnownUser } from "@/lib/auth/users";
 
 export async function middleware(req: NextRequest) {
   const { pathname, search } = req.nextUrl;
-  const user = await verifySessionToken(req.cookies.get(SESSION_COOKIE)?.value).catch(() => null);
+  const username = await verifySessionToken(req.cookies.get(SESSION_COOKIE)?.value).catch(() => null);
+  // Users removed from AUTH_USERS are signed out even if their cookie is still valid.
+  const user = username && isKnownUser(username) ? username : null;
 
   if (pathname === "/login") {
     return user ? NextResponse.redirect(new URL("/", req.url)) : NextResponse.next();
