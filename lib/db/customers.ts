@@ -37,6 +37,15 @@ export async function appendCustomer(c: Customer): Promise<void> {
   invalidate();
 }
 
+/** Remove a customer. Their sales stay and become walk-in sales (customer_id is set to null by the database). */
+export async function deleteCustomerRecord(id: string): Promise<void> {
+  const supabase = await db();
+  const { data, error } = await supabase.from("customers").delete().eq("customer_id", id).select("customer_id");
+  check(error, "delete customer");
+  if (!data?.length) throw new DbError(`${id} was not found.`, true);
+  invalidate();
+}
+
 export async function updateCustomer(id: string, patch: Partial<Omit<Customer, "customer_id" | "created_at">>) {
   const supabase = await db();
   const { data, error } = await supabase.from("customers").update(patch).eq("customer_id", id).select("customer_id");

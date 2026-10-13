@@ -232,6 +232,12 @@ export const t = {
 
   customers: {
     title: "Customers",
+    delete: "Delete customer",
+    deleteTitle: "Delete this customer?",
+    deleteConfirm: (name: string) => `${name} will be removed from your customer list. This cannot be undone.`,
+    deleteKeepsSales: (n: number) =>
+      `${n === 1 ? "Their 1 sale stays" : `Their ${n} sales stay`} in the sales history and reports, shown as walk-in customer.`,
+    deleteConfirmLabel: "Delete",
     new: "New customer",
     editTitle: "Edit customer",
     searchPlaceholder: "Search name or phone…",

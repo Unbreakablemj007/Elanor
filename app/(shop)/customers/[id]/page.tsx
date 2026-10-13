@@ -6,6 +6,7 @@ import { formatUsd } from "@/lib/format";
 import { groupBy, saleNet, statusTone } from "@/lib/reports";
 import { getCustomer, listSaleItems, listSales } from "@/lib/db";
 import { t } from "@/lib/strings";
+import DeleteCustomerButton from "./DeleteCustomerButton";
 import CustomerForm from "../CustomerForm";
 
 export default async function CustomerPage({ params }: { params: Promise<{ id: string }> }) {
@@ -33,6 +34,7 @@ export default async function CustomerPage({ params }: { params: Promise<{ id: s
             </div>
           </section>
           <CustomerForm initial={customer} />
+          <DeleteCustomerButton customerId={customer.customer_id} name={customer.name} sales={own.length} />
         </div>
 
         <section className="card">
