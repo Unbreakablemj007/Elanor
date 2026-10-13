@@ -167,6 +167,9 @@ export const t = {
     confirm: "Confirm sale",
     confirming: "Saving sale…",
     insufficientPayment: "Payment does not cover the total yet.",
+    rateChanged: "The exchange rate was just changed in Settings. Totals are updated — please check them and confirm again.",
+    pricesChanged: "A price changed since this page was opened. The cart is updated — please check it and confirm again.",
+    quickAddSave: "Add customer",
     notes: "Notes",
   },
 
@@ -202,6 +205,8 @@ export const t = {
     returnConfirm: (n: number) => `Return ${n} item${n === 1 ? "" : "s"} to stock? This cannot be undone.`,
     returnSubmit: "Return selected",
     returnNothing: "Choose at least one item to return.",
+    returnTooMany: (name: string, n: number) => `Only ${n} of ${name} can still be returned.`,
+    returnable: (n: number) => `${n} can be returned`,
     refundValue: "Refund value",
     returned: (n: number) => `${n} returned`,
     count: (n: number) => `${n} sale${n === 1 ? "" : "s"}`,
@@ -258,6 +263,8 @@ export const t = {
       `Only ${available} left of ${label}. Please update the cart.`,
     partialWrite: (saleId: string, done: string[], failed: string) =>
       `Sale ${saleId} was only partly saved. Saved: ${done.join(", ") || "nothing"}. Failed at: ${failed}. Please check the Google Sheet and fix it by hand.`,
+    partialReturn: (saleId: string, done: string[], failed: string) =>
+      `The return for ${saleId} was only partly saved. Saved: ${done.join(", ") || "nothing"}. Failed at: ${failed}. Please check the Google Sheet and fix it by hand.`,
     sheetsUnavailable: "Could not reach the Google Sheet. Check your connection and try again.",
   },
 } as const;

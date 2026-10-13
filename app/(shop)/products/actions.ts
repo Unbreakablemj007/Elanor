@@ -17,6 +17,7 @@ import {
   updateVariants,
   type Movement,
   type NewVariant,
+  type VariantPatch,
 } from "@/lib/sheets";
 import { t } from "@/lib/strings";
 
@@ -117,7 +118,7 @@ export async function saveProduct(
     const now = nowIso();
     const existing = (await listVariants({ fresh: true })).filter((v) => v.product_id === product_id);
 
-    const patches = [];
+    const patches: VariantPatch[] = [];
     const added: NewVariant[] = [];
     for (const v of data.variants) {
       const current = v.variant_id ? existing.find((e) => e.variant_id === v.variant_id) : undefined;
