@@ -3,7 +3,7 @@ import { Badge, EmptyState, PageHeader } from "@/components/ui";
 import { addDays, dayOf, formatDateTime, formatDay, isValidDay, todayDay } from "@/lib/dates";
 import { formatUsd } from "@/lib/format";
 import { groupBy, saleNet, statusTone } from "@/lib/reports";
-import { listCustomers, listSaleItems, listSales } from "@/lib/sheets";
+import { listCustomers, listSaleItems, listSales } from "@/lib/db";
 import { t } from "@/lib/strings";
 
 export const metadata = { title: t.sales.title };

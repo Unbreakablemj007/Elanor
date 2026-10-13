@@ -1,5 +1,5 @@
 import { PageHeader } from "@/components/ui";
-import { getLists, getSettings } from "@/lib/sheets";
+import { getLists, getSettings } from "@/lib/db";
 import { t } from "@/lib/strings";
 import ProductForm from "../ProductForm";
 

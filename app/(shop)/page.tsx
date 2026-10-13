@@ -5,7 +5,7 @@ import { addDays, dayOf, startOfMonth, startOfWeek, todayDay } from "@/lib/dates
 import { formatUsd } from "@/lib/format";
 import { bySize, isLowStock, variantLabel } from "@/lib/inventory";
 import { groupBy, saleNet } from "@/lib/reports";
-import { getLists, getSettings, listExpenses, listProducts, listSaleItems, listSales, listVariants } from "@/lib/sheets";
+import { getLists, getSettings, listExpenses, listProducts, listSaleItems, listSales, listVariants } from "@/lib/db";
 import { t } from "@/lib/strings";
 
 type Period = "today" | "week" | "month";

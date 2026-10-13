@@ -1,5 +1,5 @@
 /**
- * In-memory brute-force protection: 5 failed attempts for a username blocks
+ * In-memory brute-force protection: 5 failed attempts for an email blocks
  * it for 15 minutes. Resets when the server instance restarts, which is
  * acceptable for a two-person app.
  */

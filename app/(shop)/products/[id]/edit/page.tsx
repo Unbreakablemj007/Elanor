@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/ui";
 import { bySize } from "@/lib/inventory";
-import { getLists, getProduct, getSettings, listVariants } from "@/lib/sheets";
+import { getLists, getProduct, getSettings, listVariants } from "@/lib/db";
 import { t } from "@/lib/strings";
 import ProductForm from "../../ProductForm";
 

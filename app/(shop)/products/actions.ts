@@ -8,17 +8,16 @@ import { round2 } from "@/lib/format";
 import { newId } from "@/lib/ids";
 import { variantLabel } from "@/lib/inventory";
 import {
-  appendMovements,
-  appendProduct,
-  appendVariants,
+  changeStockRecord,
+  createProductRecord,
   getProduct,
   listVariants,
+  saveProductRecord,
   updateProduct,
-  updateVariants,
   type Movement,
   type NewVariant,
-  type VariantPatch,
-} from "@/lib/sheets";
+  type VariantEdit,
+} from "@/lib/db";
 import { t } from "@/lib/strings";
 
 const money = z.number().finite().min(0).max(1_000_000);
@@ -81,23 +80,24 @@ export async function createProduct(input: ProductInput): Promise<ActionResult<{
     }));
 
   try {
-    await appendProduct({
-      product_id,
-      name: data.name,
-      category: data.category,
-      description: data.description,
-      cost_price_usd: round2(data.cost_price_usd),
-      sell_price_usd: round2(data.sell_price_usd),
-      image_url: data.image_url,
-      active: true,
-      created_at: now,
-      updated_at: now,
-    });
-    await appendVariants(variants);
-    await appendMovements(movements);
+    await createProductRecord(
+      {
+        product_id,
+        name: data.name,
+        category: data.category,
+        description: data.description,
+        cost_price_usd: round2(data.cost_price_usd),
+        sell_price_usd: round2(data.sell_price_usd),
+        image_url: data.image_url,
+        active: true,
+        created_at: now,
+        updated_at: now,
+      },
+      variants,
+      movements,
+    );
     return ok({ product_id });
   } catch (err) {
-    console.error(`[products] create ${product_id} incomplete`);
     return failFromError(err);
   }
 }
@@ -113,12 +113,12 @@ export async function saveProduct(
   if (hasDuplicates(data.variants)) return fail(t.products.duplicateVariant);
 
   try {
-    const product = await getProduct(product_id, { fresh: true });
+    const product = await getProduct(product_id);
     if (!product) return fail(t.common.notFound);
     const now = nowIso();
-    const existing = (await listVariants({ fresh: true })).filter((v) => v.product_id === product_id);
+    const existing = (await listVariants()).filter((v) => v.product_id === product_id);
 
-    const patches: VariantPatch[] = [];
+    const edits: VariantEdit[] = [];
     const added: NewVariant[] = [];
     for (const v of data.variants) {
       const current = v.variant_id ? existing.find((e) => e.variant_id === v.variant_id) : undefined;
@@ -130,9 +130,12 @@ export async function saveProduct(
           current.color !== v.color ||
           current.low_stock_threshold !== v.low_stock_threshold
         ) {
-          patches.push({
-            variant: current,
-            patch: { size: v.size, color: v.color, low_stock_threshold: v.low_stock_threshold, updated_at: now },
+          edits.push({
+            variant_id: current.variant_id,
+            size: v.size,
+            color: v.color,
+            low_stock_threshold: v.low_stock_threshold,
+            updated_at: now,
           });
         }
       } else {
@@ -147,38 +150,39 @@ export async function saveProduct(
         });
       }
     }
-    // Variants left out of the form stay in the sheet; the full set must still be unique.
+    // Variants left out of the form are kept; the full set must still be unique.
     const kept = existing.filter((e) => !data.variants.some((v) => v.variant_id === e.variant_id));
     if (hasDuplicates([...kept, ...data.variants])) return fail(t.products.duplicateVariant);
 
-    await updateProduct(product_id, {
-      name: data.name,
-      category: data.category,
-      description: data.description,
-      cost_price_usd: round2(data.cost_price_usd),
-      sell_price_usd: round2(data.sell_price_usd),
-      image_url: data.image_url,
-      updated_at: now,
-    });
-    await updateVariants(patches);
-    await appendVariants(added);
-    await appendMovements(
-      added
-        .filter((v) => v.quantity > 0)
-        .map((v) => ({
-          movement_id: newId("M"),
-          date: now,
-          variant_id: v.variant_id,
-          type: "restock" as const,
-          qty_change: v.quantity,
-          reference_id: product_id,
-          created_by: user,
-          notes: t.products.initialStockNote,
-        })),
+    const movements: Movement[] = added
+      .filter((v) => v.quantity > 0)
+      .map((v) => ({
+        movement_id: newId("M"),
+        date: now,
+        variant_id: v.variant_id,
+        type: "restock" as const,
+        qty_change: v.quantity,
+        reference_id: product_id,
+        created_by: user,
+        notes: t.products.initialStockNote,
+      }));
+    await saveProductRecord(
+      product_id,
+      {
+        name: data.name,
+        category: data.category,
+        description: data.description,
+        cost_price_usd: round2(data.cost_price_usd),
+        sell_price_usd: round2(data.sell_price_usd),
+        image_url: data.image_url,
+        updated_at: now,
+      },
+      edits,
+      added,
+      movements,
     );
     return ok({ product_id });
   } catch (err) {
-    console.error(`[products] update ${product_id} incomplete`);
     return failFromError(err);
   }
 }
@@ -222,29 +226,19 @@ async function changeStock(
   notes: string,
 ): Promise<ActionResult<{ quantity: number }>> {
   try {
-    const variant = (await listVariants({ fresh: true })).find((v) => v.variant_id === variant_id);
+    const variant = (await listVariants()).find((v) => v.variant_id === variant_id);
     if (!variant) return fail(t.common.notFound);
-    const quantity = variant.quantity + change;
-    if (quantity < 0) return fail(t.errors.stockChanged(variantLabel(variant), variant.quantity));
-    const now = nowIso();
-    await updateVariants([{ variant, patch: { quantity, updated_at: now } }]);
-    try {
-      await appendMovements([
-        {
-          movement_id: newId("M"),
-          date: now,
-          variant_id,
-          type,
-          qty_change: change,
-          reference_id: variant.product_id,
-          created_by: user,
-          notes,
-        },
-      ]);
-    } catch (err) {
-      console.error(`[stock] ${variant_id} set to ${quantity} but the ${type} movement was not recorded`);
-      return failFromError(err);
-    }
+    if (variant.quantity + change < 0) return fail(t.errors.stockChanged(variantLabel(variant), variant.quantity));
+    const quantity = await changeStockRecord({
+      movement_id: newId("M"),
+      date: nowIso(),
+      variant_id,
+      type,
+      qty_change: change,
+      reference_id: variant.product_id,
+      created_by: user,
+      notes,
+    });
     return ok({ quantity });
   } catch (err) {
     return failFromError(err);

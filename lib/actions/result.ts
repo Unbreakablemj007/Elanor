@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { SheetsError } from "@/lib/sheets/client";
+import { DbError } from "@/lib/db/client";
 import { t } from "@/lib/strings";
 
 export type ActionResult<T = undefined> = { ok: true; data: T } | { ok: false; error: string };
@@ -22,7 +22,7 @@ export function zodMessage(error: z.ZodError): string {
 
 /** Turn thrown errors into a user-facing result (details are already logged). */
 export function failFromError(err: unknown): ActionResult<never> {
-  if (err instanceof SheetsError) return fail(`${t.errors.sheetsUnavailable} (${err.message})`);
+  if (err instanceof DbError) return fail(err.userFacing ? err.message : `${t.errors.dbUnavailable} (${err.message})`);
   console.error("[action] unexpected error:", err instanceof Error ? err.message : String(err));
   return fail(t.common.unexpectedError);
 }

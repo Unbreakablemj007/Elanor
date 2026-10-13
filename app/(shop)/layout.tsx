@@ -1,6 +1,6 @@
 import { BottomNav, Sidebar } from "@/components/Nav";
 import { requireUser } from "@/lib/auth/current";
-import { getSettings } from "@/lib/sheets";
+import { getSettings } from "@/lib/db";
 import { t } from "@/lib/strings";
 
 export default async function ShopLayout({ children }: { children: React.ReactNode }) {

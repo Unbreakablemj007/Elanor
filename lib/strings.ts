@@ -54,15 +54,17 @@ export const t = {
   login: {
     title: "Welcome back",
     subtitle: "Sign in to manage the shop",
-    username: "Username",
+    email: "Email",
     password: "Password",
     submit: "Sign in",
     submitting: "Signing in…",
-    invalid: "Wrong username or password.",
+    invalid: "Wrong email or password.",
+    noAccess: "This account does not have access to the shop. Ask the owner to add it.",
     blocked: (minutes: number) =>
       `Too many failed attempts. Try again in ${minutes} minute${minutes === 1 ? "" : "s"}.`,
     misconfigured: (problem: string) =>
       `Login is not set up on the server: ${problem}. Fix it in Vercel → Settings → Environment Variables, then redeploy.`,
+    unavailable: "Could not reach the login service. Check your connection and try again.",
   },
 
   dashboard: {
@@ -262,8 +264,8 @@ export const t = {
     lowStockDefault: "Default low-stock level",
     lowStockDefaultHelp: "Sizes at or below this quantity are flagged as low stock.",
     lbpRounding: "LBP rounding",
-    openSheet: "Open the Google Sheet",
-    sheetHelp: "Edit categories, sizes, colors and expense categories in the Lists tab.",
+    openSheet: "Open the database (Supabase)",
+    sheetHelp: "Edit categories, sizes, colors and expense categories in the lists table.",
     saved: "Settings saved.",
     signedInAs: (u: string) => `Signed in as ${u}`,
   },
@@ -271,10 +273,6 @@ export const t = {
   errors: {
     stockChanged: (label: string, available: number) =>
       `Only ${available} left of ${label}. Please update the cart.`,
-    partialWrite: (saleId: string, done: string[], failed: string) =>
-      `Sale ${saleId} was only partly saved. Saved: ${done.join(", ") || "nothing"}. Failed at: ${failed}. Please check the Google Sheet and fix it by hand.`,
-    partialReturn: (saleId: string, done: string[], failed: string) =>
-      `The return for ${saleId} was only partly saved. Saved: ${done.join(", ") || "nothing"}. Failed at: ${failed}. Please check the Google Sheet and fix it by hand.`,
-    sheetsUnavailable: "Could not reach the Google Sheet. Check your connection and try again.",
+    dbUnavailable: "Could not reach the database. Check your connection and try again.",
   },
 } as const;

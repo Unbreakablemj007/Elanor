@@ -5,17 +5,7 @@ import { requireUser } from "@/lib/auth/current";
 import { fail, failFromError, ok, zodMessage, type ActionResult } from "@/lib/actions/result";
 import { nowIso } from "@/lib/dates";
 import { newId } from "@/lib/ids";
-import {
-  appendMovements,
-  getSale,
-  listItemsForSale,
-  listVariants,
-  updateReturnedQty,
-  updateSaleStatus,
-  updateVariants,
-  type Movement,
-  type SaleItem,
-} from "@/lib/sheets";
+import { applyReturn, getSale, listItemsForSale, listVariants, type Movement } from "@/lib/db";
 import { t } from "@/lib/strings";
 
 const returnSchema = z.object({
@@ -36,9 +26,9 @@ export async function returnItems(input: z.infer<typeof returnSchema>): Promise<
   let sale, items, variants;
   try {
     [sale, items, variants] = await Promise.all([
-      getSale(sale_id, { fresh: true }),
-      listItemsForSale(sale_id, { fresh: true }),
-      listVariants({ fresh: true }),
+      getSale(sale_id),
+      listItemsForSale(sale_id),
+      listVariants(),
     ]);
   } catch (err) {
     return failFromError(err);
@@ -46,10 +36,7 @@ export async function returnItems(input: z.infer<typeof returnSchema>): Promise<
   if (!sale) return fail(t.common.notFound);
 
   const now = nowIso();
-  const itemUpdates: { item: SaleItem; returned_qty: number }[] = [];
-  const restock = new Map<string, number>();
   const movements: Movement[] = [];
-  const returnedAfter = new Map(items.map((i) => [i.line_id, i.returned_qty]));
   for (const { line_id, qty } of lines) {
     const item = items.find((i) => i.line_id === line_id);
     if (!item) return fail(`${t.common.notFound} (${line_id})`);
@@ -57,9 +44,6 @@ export async function returnItems(input: z.infer<typeof returnSchema>): Promise<
     if (qty > returnable) return fail(t.sales.returnTooMany(item.product_name, returnable));
     const variant = variants.find((v) => v.variant_id === item.variant_id);
     if (!variant) return fail(`${t.common.notFound} (${item.variant_id})`);
-    itemUpdates.push({ item, returned_qty: item.returned_qty + qty });
-    returnedAfter.set(line_id, item.returned_qty + qty);
-    restock.set(variant.variant_id, (restock.get(variant.variant_id) ?? 0) + qty);
     movements.push({
       movement_id: newId("M"),
       date: now,
@@ -71,30 +55,13 @@ export async function returnItems(input: z.infer<typeof returnSchema>): Promise<
       notes: "",
     });
   }
-  const variantPatches = [...restock].map(([variant_id, qty]) => {
-    const variant = variants.find((v) => v.variant_id === variant_id)!;
-    return { variant, patch: { quantity: variant.quantity + qty, updated_at: now } };
-  });
-  const allReturned = items.every((i) => (returnedAfter.get(i.line_id) ?? 0) >= i.qty);
-  const status = allReturned ? "returned" : "partially_returned";
 
-  const steps: [string, () => Promise<void>][] = [
-    ["Sale_Items (returned_qty)", () => updateReturnedQty(itemUpdates)],
-    ["Variants (stock)", () => updateVariants(variantPatches)],
-    ["Stock_Movements", () => appendMovements(movements)],
-    ["Sales (status)", () => updateSaleStatus(sale_id, status)],
-  ];
-  const done: string[] = [];
-  for (const [name, run] of steps) {
-    try {
-      await run();
-      done.push(name);
-    } catch (err) {
-      const reason = err instanceof Error ? err.message : String(err);
-      console.error(`[return ${sale_id}] FAILED at ${name}. Completed: ${done.join(", ") || "none"}. Reason: ${reason}`);
-      if (done.length === 0) return failFromError(err);
-      return fail(t.errors.partialReturn(sale_id, done, name));
-    }
+  // One database call: returned quantities, stock and the sale status are
+  // updated together, or nothing changes.
+  try {
+    await applyReturn(sale_id, lines, movements);
+  } catch (err) {
+    return failFromError(err);
   }
   return ok(null);
 }

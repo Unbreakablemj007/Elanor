@@ -13,7 +13,7 @@ export default function ShopError({ error, reset }: { error: Error & { digest?: 
     <div className="card mx-auto mt-10 max-w-md text-center">
       <AlertIcon className="mx-auto mb-3 text-danger" width={32} height={32} />
       <p className="mb-1 font-medium">{t.common.unexpectedError}</p>
-      <p className="mb-5 text-sm text-muted">{t.errors.sheetsUnavailable}</p>
+      <p className="mb-5 text-sm text-muted">{t.errors.dbUnavailable}</p>
       <button type="button" className="btn-primary w-full" onClick={reset}>
         {t.common.tryAgain}
       </button>
