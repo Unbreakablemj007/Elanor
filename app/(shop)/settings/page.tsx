@@ -5,6 +5,7 @@ import { requireUser } from "@/lib/auth/current";
 import { formatInt } from "@/lib/format";
 import { getSettings } from "@/lib/db";
 import { t } from "@/lib/strings";
+import PasswordForm from "./PasswordForm";
 import SettingsForm from "./SettingsForm";
 
 export const metadata = { title: t.settings.title };
@@ -21,6 +22,7 @@ export default async function SettingsPage() {
       <PageHeader title={t.settings.title} subtitle={t.settings.signedInAs(username)} back="/more" />
       <div className="space-y-4">
         <SettingsForm rate={settings.exchange_rate_lbp_per_usd} lowStockDefault={settings.low_stock_default} />
+        <PasswordForm />
         <section className="card space-y-2">
           <h2 className="font-semibold">{t.theme.title}</h2>
           <ThemeToggle />
