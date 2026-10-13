@@ -3,15 +3,18 @@ import ThemeToggle from "@/components/ThemeToggle";
 import { PageHeader } from "@/components/ui";
 import { requireUser } from "@/lib/auth/current";
 import { formatInt } from "@/lib/format";
-import { getSettings } from "@/lib/sheets";
+import { getSettings } from "@/lib/db";
 import { t } from "@/lib/strings";
 import SettingsForm from "./SettingsForm";
 
 export const metadata = { title: t.settings.title };
 
 export default async function SettingsPage() {
-  const [username, settings] = await Promise.all([requireUser(), getSettings({ fresh: true })]);
-  const sheetUrl = `https://docs.google.com/spreadsheets/d/${process.env.GOOGLE_SHEET_ID ?? ""}/edit`;
+  const [username, settings] = await Promise.all([requireUser(), getSettings()]);
+  const projectRef = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").match(/^https:\/\/([a-z0-9]+)\.supabase\.co/)?.[1];
+  const sheetUrl = projectRef
+    ? `https://supabase.com/dashboard/project/${projectRef}/editor`
+    : "https://supabase.com/dashboard/projects";
 
   return (
     <div className="mx-auto max-w-lg">

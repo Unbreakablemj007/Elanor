@@ -4,7 +4,7 @@ import { Badge, PageHeader } from "@/components/ui";
 import { formatDateTime } from "@/lib/dates";
 import { formatUsd } from "@/lib/format";
 import { bySize, variantLabel } from "@/lib/inventory";
-import { getLists, getProduct, getSettings, listMovements, listVariants } from "@/lib/sheets";
+import { getLists, getProduct, getSettings, listMovements, listVariants } from "@/lib/db";
 import { t } from "@/lib/strings";
 import { Thumb } from "../ProductList";
 import ArchiveButton from "./ArchiveButton";

@@ -1,9 +1,9 @@
 # Miss Elanor — Shop Manager
 
-A private web app for **Miss Elanor**, a small clothing shop in Lebanon. It covers point of sale, stock, sales history and returns, customers, expenses and a dashboard. Data lives in a Google Sheet. Payments are cash only, in USD and/or LBP.
+A private web app for **Miss Elanor**, a small clothing shop in Lebanon. It covers point of sale, stock, sales history and returns, customers, expenses and a dashboard. Data lives in a **Supabase** (Postgres) database. Payments are cash only, in USD and/or LBP.
 
-- **Stack:** Next.js 15 (App Router) · TypeScript · Tailwind CSS 4 · Google Sheets API (`googleapis`) · `bcryptjs` + `jose` auth · `zod` validation
-- **Users:** only the accounts listed in `AUTH_USERS`. There is no sign-up and no password reset.
+- **Stack:** Next.js 15 (App Router) · TypeScript · Tailwind CSS 4 · Supabase (Postgres + Auth, via `@supabase/ssr`) · `zod` validation
+- **Users:** only Supabase accounts listed in the `staff` table. Sign-ups are turned off in Supabase; there is no sign-up page.
 - **Works on:** phones (bottom navigation) and laptops (sidebar). It can also be installed as a PWA.
 
 ---
@@ -25,102 +25,62 @@ Other scripts:
 | `npm run lint` | ESLint |
 | `npm run typecheck` | TypeScript, no emit |
 | `npm run build` | Production build (also lints and type-checks) |
-| `npm run hash-password -- <password>` | Prints a bcrypt hash for `AUTH_USERS` |
 
 ### Environment variables
 
 | Variable | Description |
 | --- | --- |
-| `GOOGLE_SHEET_ID` | The ID from the Sheet URL: `docs.google.com/spreadsheets/d/<ID>/edit` |
-| `GOOGLE_SERVICE_ACCOUNT_EMAIL` | The service account's `client_email` |
-| `GOOGLE_PRIVATE_KEY` | The service account's `private_key`. Literal `\n` sequences are turned into newlines at runtime. |
-| `GOOGLE_SERVICE_ACCOUNT_JSON` | *Alternative to the two above:* the whole downloaded key file, pasted as-is |
-| `AUTH_SECRET` | A long random string (at least 32 characters) used to sign session cookies |
-| `AUTH_USERS` | JSON list of users: `[{"username":"...","passwordHash":"$2b$..."}]` |
+| `NEXT_PUBLIC_SUPABASE_URL` | Project URL, e.g. `https://zqissqafqrwugcuhesge.supabase.co` |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | The project's **publishable** key (`sb_publishable_…`) |
 
-Never commit `.env.local`; it is already listed in `.gitignore`. The app never logs the private key or password hashes.
-
-Generate `AUTH_SECRET`:
-
-```bash
-node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"
-```
+Both values are safe in the browser: data is protected by login and Row Level Security, not by hiding the key. **Never** put the `service_role` / secret key in this app or in Vercel.
 
 ---
 
-## 2. Google service account
+## 2. Database (Supabase)
 
-The app reads and writes the Sheet through a service account. The account acts like a robot user with edit access to that one Sheet.
+The full schema is in [`supabase/schema.sql`](supabase/schema.sql) and is already applied to the live project. To set up a fresh project, run that file once in the Supabase SQL editor.
 
-1. Open the [Google Cloud Console](https://console.cloud.google.com/) and create a project (or pick an existing one).
-2. Go to **APIs & Services → Library**, search for **Google Sheets API** and click **Enable**.
-3. Go to **IAM & Admin → Service Accounts → Create service account**. Give it a name such as `miss-elanor-app`. It needs no roles, so skip that step.
-4. Open the new service account, then **Keys → Add key → Create new key → JSON**. A `.json` file downloads. Keep it private.
-5. From that file, copy:
-   - `client_email` → `GOOGLE_SERVICE_ACCOUNT_EMAIL`
-   - `private_key` → `GOOGLE_PRIVATE_KEY`. In `.env.local`, wrap it in double quotes and keep the `\n` sequences as they are:
-     ```
-     GOOGLE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nMIIE...\n-----END PRIVATE KEY-----\n"
-     ```
-   **Simpler alternative:** instead of the two variables above, set one variable `GOOGLE_SERVICE_ACCOUNT_JSON` to the entire contents of the `.json` file (open it, select all, copy, paste).
-6. Open the Google Sheet, click **Share**, paste the service account email, and give it **Editor** access. Untick "Notify people".
-
-### Sheet structure
-
-The tabs and header row are already created. **Do not rename tabs or headers**, because the app maps columns by header name. Adding extra columns at the end is safe; the app ignores them and never overwrites them.
-
-| Tab | Purpose |
+| Table | Purpose |
 | --- | --- |
-| Products, Variants | Catalogue; stock is held per size/color in `Variants.quantity` |
-| Sales, Sale_Items | One row per sale and one per sale line |
-| Customers, Expenses | As named |
-| Stock_Movements | Audit trail of every stock change: restock / sale / return / adjustment |
-| Settings | `shop_name`, `exchange_rate_lbp_per_usd`, `low_stock_default`, `lbp_rounding` |
-| Lists | Dropdown values (`categories`, `sizes`, `colors`, `expense_categories`). Edit them directly in the Sheet; the order of `sizes` is the order shown in the app. |
+| `products`, `variants` | Catalogue; stock is held per size/color in `variants.quantity` |
+| `sales`, `sale_items` | One row per sale and one per sale line |
+| `customers`, `expenses` | As named |
+| `stock_movements` | Audit trail of every stock change: restock / sale / return / adjustment |
+| `settings` | `shop_name`, `exchange_rate_lbp_per_usd`, `low_stock_default`, `lbp_rounding` |
+| `lists` | Dropdown values (`categories`, `sizes`, `colors`, `expense_categories`); `sort_order` sets the order shown in the app |
+| `staff` | Which Supabase accounts may use the app, and the name shown as "Sold by" |
 
 Notes:
 
-- Reads are cached for about 30 seconds to stay under Google's API quotas. Every change made in the app refreshes the cache straight away. Edits made directly in the Sheet appear within about 30 seconds.
-- Google Sheets has no transactions, so a sale is written step by step (Sales → Sale_Items → Variants → Stock_Movements). If a step fails, the app shows exactly which steps were saved and which failed, so the Sheet can be fixed by hand. The same detail is written to the server log.
-- Stock is re-checked against a fresh read of the Sheet right before a sale is saved.
+- Edit dropdown lists and settings in **Supabase → Table Editor** (Settings in the app links there).
+- Every multi-step write runs inside one Postgres function — `record_sale`, `apply_return`, `change_stock`, `create_product`, `save_product` — so it either fully succeeds or changes nothing.
+- Stock can never go below zero: the database re-checks it inside the same transaction, so two phones selling the last item at the same time cannot oversell.
+- Row Level Security is on for every table. Only signed-in users listed in `staff` can read or write; everyone else gets nothing.
 
 ---
 
-## 3. Users and password hashes
+## 3. Users
 
-Create a hash for each person:
+1. Supabase → **Authentication → Users → Add user**: enter email and password and tick **Auto Confirm User**.
+2. Add the person to the staff list (SQL editor):
+   ```sql
+   insert into public.staff (user_id, display_name)
+   select id, 'Name shown in the app' from auth.users where email = 'person@example.com';
+   ```
+3. Keep **Authentication → Sign In / Providers → Allow new users to sign up** turned off.
 
-```bash
-npm run hash-password -- 'their-password'
-```
+To remove someone, delete their row in `staff` (or the user in Authentication). Passwords are changed in Authentication → Users.
 
-The script prints two versions of the hash:
-
-- **For Vercel:** paste the hash as-is.
-- **For `.env.local`:** use the escaped version, where every `$` is written as `\$`. Next.js expands `$...` inside `.env` files, so an unescaped hash gets mangled and login fails.
-
-Example `.env.local` line (all on one line):
-
-```
-AUTH_USERS=[{"username":"owner","passwordHash":"\$2b\$12\$abc..."},{"username":"wife","passwordHash":"\$2b\$12\$def..."}]
-```
-
-Login rules:
-
-- Sessions last 30 days, in an httpOnly, `SameSite=Lax` cookie that is `Secure` in production.
-- After 5 wrong passwords for a username, that username is blocked for 15 minutes. The counter is kept in server memory, so it resets when the server restarts.
-- To change a password or remove a user, update `AUTH_USERS` and redeploy. A removed user's session stops working immediately.
+Sessions are handled by Supabase Auth (cookies refreshed by `middleware.ts`). After 5 wrong passwords for an email the app blocks it for 15 minutes (in server memory), on top of Supabase's own rate limits.
 
 ---
 
 ## 4. Deploying to Vercel
 
-1. Push this repository to GitHub.
-2. On [vercel.com](https://vercel.com), click **Add New → Project** and import the repository. The framework is detected as Next.js; keep the defaults.
-3. Under **Settings → Environment Variables**, add all five variables from the table above for **Production** (and Preview, if you use it):
-   - `GOOGLE_PRIVATE_KEY`: paste the key either with real line breaks or with literal `\n`. Both work. Don't add surrounding quotes.
-   - `AUTH_USERS`: paste the JSON with the **unescaped** hashes.
-4. Deploy. Later changes to environment variables need a redeploy (**Deployments → … → Redeploy**).
+1. Import the GitHub repository in Vercel (framework: Next.js, defaults are fine).
+2. **Settings → Environment Variables**: add the two variables above for Production, Preview and Development. Vercel may warn about the `NEXT_PUBLIC_` prefix; choose **Config** — these values are meant to be public.
+3. Deploy. Changing environment variables later needs a redeploy (**Deployments → … → Redeploy**).
 
 ### Installing on a phone
 
@@ -135,7 +95,7 @@ Open the deployed URL and log in, then:
 
 ```
 app/
-  login/                 Login page + login/logout server actions
+  login/                 Login page + login/logout server actions (Supabase Auth)
   (shop)/                Everything behind login (shared nav layout)
     page.tsx             Dashboard
     sell/                POS screen + createSale action
@@ -145,19 +105,20 @@ app/
   manifest.ts            PWA manifest
 components/              Nav, modal/confirm dialog, bar chart, small UI pieces
 lib/
-  sheets/                ALL Google Sheets access (one module per tab + client.ts)
-  auth/                  JWT session, AUTH_USERS parsing, rate limiting
+  db/                    ALL database access (one module per table + client.ts)
+  supabase/              Supabase clients for server code and middleware
+  auth/                  Current staff member, login rate limiting
   strings.ts             All UI text (add an Arabic dictionary here later)
   payment.ts             Checkout maths (shared by POS and server)
   dates.ts  format.ts  ids.ts  inventory.ts  reports.ts  receipt.ts
-middleware.ts            Redirects to /login unless signed in
-scripts/hash-password.mjs
+middleware.ts            Refreshes the session; redirects to /login unless signed in
+supabase/schema.sql      Full database schema, policies and functions
 ```
 
 ### Conventions
 
 - IDs look like `PREFIX-YYMMDD-XXXX` (for example `S-261013-K7QD`), using the Asia/Beirut date.
-- Timestamps are ISO strings with the Beirut offset (`2026-10-13T14:05:09+03:00`). Expense dates are stored as `YYYY-MM-DD`.
+- Timestamps are stored as `timestamptz` and shown in Beirut time; the app converts them to ISO strings with the Beirut offset (`2026-10-13T14:05:09+03:00`). Expense dates are plain dates (`YYYY-MM-DD`).
 - USD is the base currency. Each sale and expense stores the exchange rate used at that moment, so changing the rate never alters history. LBP amounts are rounded to `lbp_rounding` (default 5,000).
 - When change is due, the cashier picks USD or LBP. The sale records the change in that currency (`change_usd` or `change_lbp`; the other stays 0).
 - Profit = revenue (net of returns) − cost of items sold − expenses.

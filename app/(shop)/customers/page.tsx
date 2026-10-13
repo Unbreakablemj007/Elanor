@@ -2,7 +2,7 @@ import Link from "next/link";
 import { PlusIcon } from "@/components/icons";
 import { PageHeader } from "@/components/ui";
 import { groupBy, saleNet } from "@/lib/reports";
-import { listCustomers, listSaleItems, listSales } from "@/lib/sheets";
+import { listCustomers, listSaleItems, listSales } from "@/lib/db";
 import { t } from "@/lib/strings";
 import CustomerList from "./CustomerList";
 

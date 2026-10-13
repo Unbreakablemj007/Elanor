@@ -1,16 +1,23 @@
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { SESSION_COOKIE, verifySessionToken } from "./session";
-import { isKnownUser } from "./users";
+import { cache } from "react";
+import { createClient } from "@/lib/supabase/server";
 
-/** Logged-in username, or null. Users removed from AUTH_USERS are rejected. */
-export async function getCurrentUser(): Promise<string | null> {
-  const token = (await cookies()).get(SESSION_COOKIE)?.value;
-  const username = await verifySessionToken(token);
-  return username && isKnownUser(username) ? username : null;
-}
+/**
+ * Display name of the signed-in staff member, or null.
+ * A Supabase account that is not in the `staff` table counts as signed out.
+ */
+export const getCurrentUser = cache(async (): Promise<string | null> => {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+  const { data, error } = await supabase.from("staff").select("display_name").eq("user_id", user.id).maybeSingle();
+  if (error) console.error(`[auth] could not read the staff list: ${error.message}`);
+  return data?.display_name ? String(data.display_name) : null;
+});
 
-/** For pages and server actions: the username, or redirect to /login. */
+/** For pages and server actions: the staff member's name, or redirect to /login. */
 export async function requireUser(): Promise<string> {
   const user = await getCurrentUser();
   if (!user) redirect("/login");

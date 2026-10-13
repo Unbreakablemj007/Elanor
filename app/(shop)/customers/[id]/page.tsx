@@ -4,7 +4,7 @@ import { Badge, PageHeader } from "@/components/ui";
 import { formatDateTime } from "@/lib/dates";
 import { formatUsd } from "@/lib/format";
 import { groupBy, saleNet, statusTone } from "@/lib/reports";
-import { getCustomer, listSaleItems, listSales } from "@/lib/sheets";
+import { getCustomer, listSaleItems, listSales } from "@/lib/db";
 import { t } from "@/lib/strings";
 import CustomerForm from "../CustomerForm";
 

@@ -3,7 +3,7 @@ import { ChevronLeftIcon, ChevronRightIcon } from "@/components/icons";
 import { EmptyState, PageHeader } from "@/components/ui";
 import { dayOf, formatDay, formatMonth, isValidMonth, shiftMonth, todayDay } from "@/lib/dates";
 import { formatLbp, formatUsd } from "@/lib/format";
-import { getLists, getSettings, listExpenses } from "@/lib/sheets";
+import { getLists, getSettings, listExpenses } from "@/lib/db";
 import { t } from "@/lib/strings";
 import ExpenseForm from "./ExpenseForm";
 

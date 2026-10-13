@@ -3,7 +3,7 @@
 import { z } from "zod";
 import { requireUser } from "@/lib/auth/current";
 import { fail, failFromError, ok, zodMessage, type ActionResult } from "@/lib/actions/result";
-import { updateSettings } from "@/lib/sheets";
+import { updateSettings } from "@/lib/db";
 
 const settingsSchema = z.object({
   exchange_rate_lbp_per_usd: z.number().int("Use a whole number").min(1).max(100_000_000),

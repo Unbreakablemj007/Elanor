@@ -5,7 +5,7 @@ import { requireUser } from "@/lib/auth/current";
 import { fail, failFromError, ok, zodMessage, type ActionResult } from "@/lib/actions/result";
 import { nowIso } from "@/lib/dates";
 import { newId } from "@/lib/ids";
-import { appendCustomer, updateCustomer, type Customer } from "@/lib/sheets";
+import { appendCustomer, updateCustomer, type Customer } from "@/lib/db";
 
 const customerSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(120),

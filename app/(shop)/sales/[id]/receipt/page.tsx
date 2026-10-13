@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/ui";
-import { getCustomer, getSale, getSettings, listItemsForSale } from "@/lib/sheets";
+import { getCustomer, getSale, getSettings, listItemsForSale } from "@/lib/db";
 import { t } from "@/lib/strings";
 import Receipt from "./Receipt";
 

@@ -1,5 +1,5 @@
 import { PageHeader } from "@/components/ui";
-import { getLists, getSettings, listCustomers, listProducts, listVariants } from "@/lib/sheets";
+import { getLists, getSettings, listCustomers, listProducts, listVariants } from "@/lib/db";
 import { t } from "@/lib/strings";
 import Pos from "./Pos";
 

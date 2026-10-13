@@ -9,18 +9,15 @@ import { newId } from "@/lib/ids";
 import { variantLabel } from "@/lib/inventory";
 import { computeDiscount, computePayment } from "@/lib/payment";
 import {
-  appendMovements,
-  appendSale,
-  appendSaleItems,
   getSettings,
   listCustomers,
   listProducts,
   listVariants,
-  updateVariants,
+  recordSale,
+  type Movement,
   type Sale,
   type SaleItem,
-  type VariantPatch,
-} from "@/lib/sheets";
+} from "@/lib/db";
 import { t } from "@/lib/strings";
 
 const saleSchema = z.object({
@@ -54,11 +51,12 @@ export async function createSale(input: SaleInput): Promise<ActionResult<{ sale_
   const sale_id = newId("S");
   let variants, products, settings, customers;
   try {
-    // Fresh reads: the stock check must see the latest quantities.
+    // Live reads for a friendly stock check; the database re-checks stock
+    // when the sale is saved, so two phones can never oversell.
     [variants, products, settings, customers] = await Promise.all([
-      listVariants({ fresh: true }),
-      listProducts({ fresh: true }),
-      getSettings({ fresh: true }),
+      listVariants(),
+      listProducts(),
+      getSettings(),
       data.customer_id ? listCustomers() : Promise.resolve([]),
     ]);
   } catch (err) {
@@ -73,8 +71,7 @@ export async function createSale(input: SaleInput): Promise<ActionResult<{ sale_
   if (rate !== data.expected_rate) return fail(t.sell.rateChanged);
 
   const now = nowIso();
-  const items: Omit<SaleItem, "rowNumber">[] = [];
-  const variantPatches: VariantPatch[] = [];
+  const items: SaleItem[] = [];
   for (const [variant_id, qty] of wanted) {
     const variant = variants.find((v) => v.variant_id === variant_id);
     const product = variant && products.find((p) => p.product_id === variant.product_id);
@@ -96,7 +93,6 @@ export async function createSale(input: SaleInput): Promise<ActionResult<{ sale_
       line_total_usd: round2(product.sell_price_usd * qty),
       returned_qty: 0,
     });
-    variantPatches.push({ variant, patch: { quantity: variant.quantity - qty, updated_at: now } });
   }
 
   const subtotal = round2(items.reduce((s, i) => s + i.line_total_usd, 0));
@@ -133,40 +129,23 @@ export async function createSale(input: SaleInput): Promise<ActionResult<{ sale_
     notes: data.notes,
   };
 
-  // Sheets has no transactions: write step by step and report exactly what
-  // was saved if a step fails, so it can be fixed by hand in the Sheet.
-  const steps: [string, () => Promise<void>][] = [
-    ["Sales", () => appendSale(sale)],
-    ["Sale_Items", () => appendSaleItems(items)],
-    ["Variants (stock)", () => updateVariants(variantPatches)],
-    [
-      "Stock_Movements",
-      () =>
-        appendMovements(
-          items.map((i) => ({
-            movement_id: newId("M"),
-            date: now,
-            variant_id: i.variant_id,
-            type: "sale" as const,
-            qty_change: -i.qty,
-            reference_id: sale_id,
-            created_by: user,
-            notes: "",
-          })),
-        ),
-    ],
-  ];
-  const done: string[] = [];
-  for (const [name, run] of steps) {
-    try {
-      await run();
-      done.push(name);
-    } catch (err) {
-      const reason = err instanceof Error ? err.message : String(err);
-      console.error(`[sale ${sale_id}] FAILED at ${name}. Completed: ${done.join(", ") || "none"}. Reason: ${reason}`);
-      if (done.length === 0) return failFromError(err);
-      return fail(t.errors.partialWrite(sale_id, done, name));
-    }
+  const movements: Movement[] = items.map((i) => ({
+    movement_id: newId("M"),
+    date: now,
+    variant_id: i.variant_id,
+    type: "sale",
+    qty_change: -i.qty,
+    reference_id: sale_id,
+    created_by: user,
+    notes: "",
+  }));
+
+  // One database call: the sale, its lines and the stock decrease are saved
+  // together, or nothing is saved.
+  try {
+    await recordSale(sale, items, movements);
+  } catch (err) {
+    return failFromError(err);
   }
   return ok({ sale_id });
 }

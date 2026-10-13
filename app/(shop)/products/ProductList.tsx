@@ -6,7 +6,7 @@ import { SearchIcon } from "@/components/icons";
 import { Badge, EmptyState } from "@/components/ui";
 import { formatUsd } from "@/lib/format";
 import { isLowStock, stockBySize, type StockVariant } from "@/lib/inventory";
-import type { Product } from "@/lib/sheets/products";
+import type { Product } from "@/lib/db/products";
 import { t } from "@/lib/strings";
 
 export default function ProductList({

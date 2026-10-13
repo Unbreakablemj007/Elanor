@@ -7,13 +7,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit",
-    "hash-password": "node scripts/hash-password.mjs"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "bcryptjs": "^3.0.3",
-    "googleapis": "^185.0.0",
-    "jose": "^6.2.12",
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.117.3",
     "next": "^15.5.27",
     "react": "19.2",
     "react-dom": "19.2",

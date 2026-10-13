@@ -6,7 +6,7 @@ import { fail, failFromError, ok, zodMessage, type ActionResult } from "@/lib/ac
 import { isValidDay } from "@/lib/dates";
 import { round2 } from "@/lib/format";
 import { newId } from "@/lib/ids";
-import { appendExpense, getSettings } from "@/lib/sheets";
+import { appendExpense, getSettings } from "@/lib/db";
 
 const expenseSchema = z.object({
   date: z.string().refine(isValidDay, "Invalid date"),
@@ -22,7 +22,7 @@ export async function createExpense(input: z.infer<typeof expenseSchema>): Promi
   if (!parsed.success) return fail(zodMessage(parsed.error));
   const e = parsed.data;
   try {
-    const rate = (await getSettings({ fresh: true })).exchange_rate_lbp_per_usd;
+    const rate = (await getSettings()).exchange_rate_lbp_per_usd;
     const amount = e.currency === "LBP" ? Math.round(e.amount) : round2(e.amount);
     await appendExpense({
       expense_id: newId("E"),

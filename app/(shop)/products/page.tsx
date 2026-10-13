@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { PlusIcon } from "@/components/icons";
 import { PageHeader } from "@/components/ui";
-import { getLists, getSettings, listProducts, listVariants } from "@/lib/sheets";
+import { getLists, getSettings, listProducts, listVariants } from "@/lib/db";
 import { t } from "@/lib/strings";
 import ProductList from "./ProductList";
 

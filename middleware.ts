@@ -1,23 +1,28 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { SESSION_COOKIE, verifySessionToken } from "@/lib/auth/session";
-import { isKnownUser } from "@/lib/auth/users";
+import { updateSession } from "@/lib/supabase/middleware";
 
 export async function middleware(req: NextRequest) {
   const { pathname, search } = req.nextUrl;
-  const username = await verifySessionToken(req.cookies.get(SESSION_COOKIE)?.value).catch(() => null);
-  // Users removed from AUTH_USERS are signed out even if their cookie is still valid.
-  const user = username && isKnownUser(username) ? username : null;
+  const { response, userId } = await updateSession(req);
+
+  // Keep refreshed session cookies on redirects too.
+  const redirectTo = (url: URL) => {
+    const res = NextResponse.redirect(url);
+    for (const c of response.cookies.getAll()) res.cookies.set(c);
+    return res;
+  };
 
   if (pathname === "/login") {
-    return user ? NextResponse.redirect(new URL("/", req.url)) : NextResponse.next();
+    return userId ? redirectTo(new URL("/", req.url)) : response;
   }
 
-  if (!user) {
+  if (!userId) {
     const url = new URL("/login", req.url);
     if (pathname !== "/") url.searchParams.set("next", pathname + search);
-    return NextResponse.redirect(url);
+    return redirectTo(url);
   }
-  return NextResponse.next();
+  // Pages also check the staff list (requireUser) and the database enforces it (RLS).
+  return response;
 }
 
 export const config = {
