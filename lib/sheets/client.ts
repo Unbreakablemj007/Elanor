@@ -48,14 +48,47 @@ function getSpreadsheetId(): string {
   return id;
 }
 
+type Credentials = { email: string; key: string };
+
+function fromJson(raw: string, name: string): Credentials {
+  let json: { client_email?: unknown; private_key?: unknown };
+  try {
+    json = JSON.parse(raw.trim());
+  } catch {
+    throw new SheetsError(`${name} is not valid JSON. Paste the whole downloaded key file.`);
+  }
+  if (typeof json.client_email !== "string" || typeof json.private_key !== "string") {
+    throw new SheetsError(`${name} has no client_email/private_key. Paste the whole downloaded key file.`);
+  }
+  return { email: json.client_email, key: json.private_key };
+}
+
+/**
+ * Credentials come either from GOOGLE_SERVICE_ACCOUNT_JSON (the whole key
+ * file pasted as-is) or from GOOGLE_SERVICE_ACCOUNT_EMAIL + GOOGLE_PRIVATE_KEY.
+ */
+function readCredentials(): Credentials {
+  const file = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
+  if (file && file.trim()) return fromJson(file, "GOOGLE_SERVICE_ACCOUNT_JSON");
+
+  const rawKey = process.env.GOOGLE_PRIVATE_KEY?.trim() ?? "";
+  // The whole key file pasted into GOOGLE_PRIVATE_KEY by mistake.
+  if (rawKey.startsWith("{")) return fromJson(rawKey, "GOOGLE_PRIVATE_KEY");
+
+  const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL?.trim().replace(/^"|"$/g, "");
+  // Vercel/.env store the key with literal "\n"; turn them into real newlines.
+  const key = rawKey.replace(/^"|"$/g, "").replace(/\\n/g, "\n");
+  if (!email || !key) {
+    throw new SheetsError(
+      "Google credentials are not set (GOOGLE_SERVICE_ACCOUNT_JSON, or GOOGLE_SERVICE_ACCOUNT_EMAIL + GOOGLE_PRIVATE_KEY).",
+    );
+  }
+  return { email, key };
+}
+
 function getClient(): sheets_v4.Sheets {
   if (sheetsClient) return sheetsClient;
-  const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
-  // Vercel/.env store the key with literal "\n"; turn them into real newlines.
-  const key = process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n");
-  if (!email || !key) {
-    throw new SheetsError("GOOGLE_SERVICE_ACCOUNT_EMAIL / GOOGLE_PRIVATE_KEY are not set.");
-  }
+  const { email, key } = readCredentials();
   const auth = new google.auth.JWT({
     email,
     key,

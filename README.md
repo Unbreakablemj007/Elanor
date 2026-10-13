@@ -34,6 +34,7 @@ Other scripts:
 | `GOOGLE_SHEET_ID` | The ID from the Sheet URL: `docs.google.com/spreadsheets/d/<ID>/edit` |
 | `GOOGLE_SERVICE_ACCOUNT_EMAIL` | The service account's `client_email` |
 | `GOOGLE_PRIVATE_KEY` | The service account's `private_key`. Literal `\n` sequences are turned into newlines at runtime. |
+| `GOOGLE_SERVICE_ACCOUNT_JSON` | *Alternative to the two above:* the whole downloaded key file, pasted as-is |
 | `AUTH_SECRET` | A long random string (at least 32 characters) used to sign session cookies |
 | `AUTH_USERS` | JSON list of users: `[{"username":"...","passwordHash":"$2b$..."}]` |
 
@@ -61,6 +62,7 @@ The app reads and writes the Sheet through a service account. The account acts l
      ```
      GOOGLE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nMIIE...\n-----END PRIVATE KEY-----\n"
      ```
+   **Simpler alternative:** instead of the two variables above, set one variable `GOOGLE_SERVICE_ACCOUNT_JSON` to the entire contents of the `.json` file (open it, select all, copy, paste).
 6. Open the Google Sheet, click **Share**, paste the service account email, and give it **Editor** access. Untick "Notify people".
 
 ### Sheet structure
