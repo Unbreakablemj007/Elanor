@@ -36,6 +36,7 @@ export default function ReturnForm({
   const router = useRouter();
   const [qtys, setQtys] = useState<Record<string, number>>({});
   const [confirming, setConfirming] = useState(false);
+  const [returning, setReturning] = useState(false);
   const [error, setError] = useState("");
   const [pending, startTransition] = useTransition();
 
@@ -60,13 +61,15 @@ export default function ReturnForm({
         return;
       }
       setQtys({});
+      setReturning(false);
       router.refresh();
     });
   }
 
   return (
-    <section className="card">
-      <h2 className="mb-2 font-semibold">{t.sales.items}</h2>
+    <section id="return" className={`card ${returning ? "ring-2 ring-accent" : ""}`}>
+      <h2 className="mb-2 font-semibold">{returning ? t.sales.returnStart : t.sales.items}</h2>
+      {returning && <p className="mb-2 rounded-xl bg-accent-soft px-3 py-2 text-sm text-accent-strong">{t.sales.returnHint}</p>}
       <ul className="divide-y divide-line">
         {items.map((i) => {
           const max = i.qty - i.returned_qty;
@@ -85,7 +88,7 @@ export default function ReturnForm({
                 </div>
                 <p className="shrink-0 font-semibold">{formatUsd(i.line_total_usd)}</p>
               </div>
-              {max > 0 && (
+              {returning && max > 0 && (
                 <div className="mt-2 flex items-center justify-between">
                   <span className="text-xs text-muted">
                     {t.sales.returnQty} ({t.sales.returnable(max)})
@@ -105,7 +108,14 @@ export default function ReturnForm({
           );
         })}
       </ul>
-      {anyReturnable && (
+      {anyReturnable && !returning && (
+        <div className="mt-3 border-t border-line pt-3">
+          <button type="button" className="btn-primary w-full" onClick={() => { setError(""); setReturning(true); }}>
+            {t.sales.returnStart}
+          </button>
+        </div>
+      )}
+      {anyReturnable && returning && (
         <div className="mt-3 space-y-3 border-t border-line pt-3">
           {count > 0 && (
             <p className="flex justify-between text-sm">
@@ -114,9 +124,14 @@ export default function ReturnForm({
             </p>
           )}
           {error && <ErrorBox>{error}</ErrorBox>}
-          <button type="button" className="btn-secondary w-full" disabled={count === 0 || pending} onClick={() => setConfirming(true)}>
-            {t.sales.returnSubmit}
-          </button>
+          <div className="grid grid-cols-2 gap-2">
+            <button type="button" className="btn-secondary" disabled={pending} onClick={() => { setQtys({}); setError(""); setReturning(false); }}>
+              {t.common.cancel}
+            </button>
+            <button type="button" className="btn-primary" disabled={count === 0 || pending} onClick={() => setConfirming(true)}>
+              {t.sales.returnSubmit}
+            </button>
+          </div>
         </div>
       )}
       <ConfirmDialog
