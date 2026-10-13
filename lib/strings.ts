@@ -74,6 +74,7 @@ export const t = {
     week: "This week",
     month: "This month",
     salesCount: "Sales",
+    returnedSales: (n: number) => `${n} fully returned, not counted`,
     revenue: "Revenue",
     profit: "Profit",
     expenses: "Expenses",

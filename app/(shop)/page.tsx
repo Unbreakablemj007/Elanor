@@ -33,6 +33,9 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
   const itemsBySale = groupBy(items, (i) => i.sale_id);
   const periodSales = sales.filter((s) => inPeriod(s.date));
+  // Fully returned sales are not real sales: leave them out of the count.
+  const keptSales = periodSales.filter((s) => s.status !== "returned");
+  const returnedCount = periodSales.length - keptSales.length;
   let revenue = 0;
   let cost = 0;
   for (const s of periodSales) {
@@ -105,7 +108,11 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       </nav>
 
       <section className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Stat label={t.dashboard.salesCount} value={String(periodSales.length)} />
+        <Stat
+          label={t.dashboard.salesCount}
+          value={String(keptSales.length)}
+          sub={returnedCount > 0 ? t.dashboard.returnedSales(returnedCount) : undefined}
+        />
         <Stat label={t.dashboard.revenue} value={formatUsd(revenue)} />
         <Stat label={t.dashboard.profit} value={formatUsd(profit)} tone={profit < 0 ? "danger" : "default"} />
         <Stat label={t.dashboard.expenses} value={formatUsd(expenseTotal)} sub={`${t.dashboard.costOfGoods}: ${formatUsd(cost)}`} />

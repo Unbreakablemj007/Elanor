@@ -29,7 +29,7 @@ export default async function CustomerPage({ params }: { params: Promise<{ id: s
             </div>
             <div>
               <p className="text-xs text-muted">{t.customers.purchases}</p>
-              <p className="text-xl font-semibold">{own.length}</p>
+              <p className="text-xl font-semibold">{own.filter((s) => s.status !== "returned").length}</p>
             </div>
           </section>
           <CustomerForm initial={customer} />
