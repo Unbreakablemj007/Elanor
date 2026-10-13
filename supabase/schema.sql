@@ -331,6 +331,23 @@ begin
   end loop;
 end $$;
 
+-- ---------- Product photos (Supabase Storage) -------------------------------
+-- Public-read bucket; only staff can upload, replace or remove.
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('product-images', 'product-images', true, 5242880, array['image/jpeg','image/png','image/webp'])
+on conflict (id) do nothing;
+
+create policy "staff upload product images" on storage.objects
+  for insert to authenticated
+  with check (bucket_id = 'product-images' and (select private.is_staff()));
+create policy "staff update product images" on storage.objects
+  for update to authenticated
+  using (bucket_id = 'product-images' and (select private.is_staff()))
+  with check (bucket_id = 'product-images' and (select private.is_staff()));
+create policy "staff delete product images" on storage.objects
+  for delete to authenticated
+  using (bucket_id = 'product-images' and (select private.is_staff()));
+
 -- ---------- Starting values --------------------------------------------------
 insert into public.settings (key, value, description) values
   ('shop_name', 'Miss Elanor', 'Shown in the app header and on receipts'),
@@ -340,10 +357,13 @@ insert into public.settings (key, value, description) values
 on conflict (key) do nothing;
 
 insert into public.lists (list_name, value, sort_order) values
-  ('categories','Dresses',1),('categories','Tops',2),('categories','Pants',3),
+  ('categories','Dresses',1),('categories','Tops',2),('categories','Jeans',3),('categories','Pants',3),
   ('categories','Skirts',4),('categories','Jackets',5),('categories','Accessories',6),
   ('sizes','XS',1),('sizes','S',2),('sizes','M',3),('sizes','L',4),
   ('sizes','XL',5),('sizes','XXL',6),('sizes','One Size',7),
+  ('sizes','25',125),('sizes','26',126),('sizes','27',127),('sizes','28',128),('sizes','29',129),
+  ('sizes','30',130),('sizes','31',131),('sizes','34',134),('sizes','36',136),('sizes','38',138),
+  ('sizes','40',140),('sizes','42',142),('sizes','44',144),
   ('colors','Black',1),('colors','White',2),('colors','Beige',3),('colors','Navy',4),
   ('colors','Red',5),('colors','Pink',6),('colors','Green',7),
   ('expense_categories','Rent',1),('expense_categories','Electricity / Generator',2),
