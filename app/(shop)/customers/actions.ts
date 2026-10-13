@@ -5,7 +5,8 @@ import { requireUser } from "@/lib/auth/current";
 import { fail, failFromError, ok, zodMessage, type ActionResult } from "@/lib/actions/result";
 import { nowIso } from "@/lib/dates";
 import { newId } from "@/lib/ids";
-import { appendCustomer, updateCustomer, type Customer } from "@/lib/db";
+import { redirect } from "next/navigation";
+import { appendCustomer, deleteCustomerRecord, updateCustomer, type Customer } from "@/lib/db";
 
 const customerSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(120),
@@ -44,4 +45,17 @@ export async function saveCustomer(customer_id: string, input: CustomerInput): P
   } catch (err) {
     return failFromError(err);
   }
+}
+
+/** Delete a customer (their sales are kept as walk-in sales), then go to the list. */
+export async function deleteCustomer(customer_id: string): Promise<ActionResult<null>> {
+  await requireUser();
+  const id = z.string().min(1).max(40).safeParse(customer_id);
+  if (!id.success) return fail(zodMessage(id.error));
+  try {
+    await deleteCustomerRecord(id.data);
+  } catch (err) {
+    return failFromError(err);
+  }
+  redirect("/customers");
 }
