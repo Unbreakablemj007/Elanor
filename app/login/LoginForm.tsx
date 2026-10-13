@@ -18,6 +18,7 @@ export default function LoginForm({ next }: { next?: string }) {
           id="username"
           name="username"
           className="input"
+          defaultValue={state.username}
           autoComplete="username"
           autoCapitalize="none"
           autoCorrect="off"
