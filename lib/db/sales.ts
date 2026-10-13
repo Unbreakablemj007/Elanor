@@ -1,4 +1,4 @@
-import { check, db, invalidate, iso, num, rpc, selectAll, str } from "./client";
+import { check, db, DbError, invalidate, iso, num, rpc, selectAll, str } from "./client";
 import type { Movement } from "./movements";
 import type { SaleItem } from "./saleItems";
 
@@ -66,6 +66,27 @@ export async function recordSale(sale: Sale, items: SaleItem[], movements: Movem
     p_items: items,
     p_movements: movements,
   });
+  invalidate();
+}
+
+/**
+ * Remove a sale from history. Pieces not yet returned are first put back in
+ * stock in one atomic step (apply_return, noted "Sale deleted"), then the sale
+ * and its lines are deleted. If the delete step fails, the sale is simply left
+ * fully returned, which is a safe state.
+ */
+export async function deleteSaleRecord(
+  sale_id: string,
+  remaining: { line_id: string; qty: number }[],
+  movements: Movement[],
+): Promise<void> {
+  if (remaining.length > 0) {
+    await rpc("apply_return", { p_sale_id: sale_id, p_lines: remaining, p_movements: movements });
+  }
+  const supabase = await db();
+  const { data, error } = await supabase.from("sales").delete().eq("sale_id", sale_id).select("sale_id");
+  check(error, "delete sale");
+  if (!data?.length) throw new DbError(`Sale ${sale_id} could not be deleted.`, true);
   invalidate();
 }
 

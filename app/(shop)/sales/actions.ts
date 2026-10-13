@@ -5,7 +5,8 @@ import { requireUser } from "@/lib/auth/current";
 import { fail, failFromError, ok, zodMessage, type ActionResult } from "@/lib/actions/result";
 import { nowIso } from "@/lib/dates";
 import { newId } from "@/lib/ids";
-import { applyReturn, getSale, listItemsForSale, listVariants, type Movement } from "@/lib/db";
+import { redirect } from "next/navigation";
+import { applyReturn, deleteSaleRecord, getSale, listItemsForSale, listVariants, type Movement } from "@/lib/db";
 import { t } from "@/lib/strings";
 
 const returnSchema = z.object({
@@ -64,4 +65,38 @@ export async function returnItems(input: z.infer<typeof returnSchema>): Promise<
     return failFromError(err);
   }
   return ok(null);
+}
+
+/** Delete a sale (unreturned pieces go back to stock first), then go to the sales list. */
+export async function deleteSale(sale_id: string): Promise<ActionResult<null>> {
+  const user = await requireUser();
+  const id = z.string().min(1).max(40).safeParse(sale_id);
+  if (!id.success) return fail(zodMessage(id.error));
+
+  try {
+    const [sale, items] = await Promise.all([getSale(id.data), listItemsForSale(id.data)]);
+    if (!sale) return fail(t.common.notFound);
+    const now = nowIso();
+    const remaining = items
+      .filter((i) => i.qty > i.returned_qty)
+      .map((i) => ({ line_id: i.line_id, qty: i.qty - i.returned_qty, variant_id: i.variant_id }));
+    const movements: Movement[] = remaining.map((r) => ({
+      movement_id: newId("M"),
+      date: now,
+      variant_id: r.variant_id,
+      type: "return",
+      qty_change: r.qty,
+      reference_id: id.data,
+      created_by: user,
+      notes: t.sales.deletedNote,
+    }));
+    await deleteSaleRecord(
+      id.data,
+      remaining.map(({ line_id, qty }) => ({ line_id, qty })),
+      movements,
+    );
+  } catch (err) {
+    return failFromError(err);
+  }
+  redirect("/sales");
 }
