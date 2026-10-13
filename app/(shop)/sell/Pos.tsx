@@ -1,10 +1,11 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { MinusIcon, PlusIcon, QrIcon, SearchIcon, TrashIcon, XIcon } from "@/components/icons";
 import QrScanner, { type ScanResult } from "@/components/QrScanner";
 import { variantIdFromScan } from "@/lib/qr";
+import { looksLikeWrongLayout, useScannerInput } from "@/lib/useScannerInput";
 import { Modal } from "@/components/Modal";
 import { EmptyState, ErrorBox } from "@/components/ui";
 import { formatInt, formatLbp, formatUsd, parseNumber, round2 } from "@/lib/format";
@@ -51,6 +52,7 @@ export default function Pos({
   const [notes, setNotes] = useState("");
   const [error, setError] = useState("");
   const [scanning, setScanning] = useState(false);
+  const [scanNotice, setScanNotice] = useState<ScanResult | null>(null);
 
   const productById = useMemo(() => new Map(products.map((p) => [p.product_id, p])), [products]);
   const variantById = useMemo(() => new Map(variants.map((v) => [v.variant_id, v])), [variants]);
@@ -107,7 +109,7 @@ export default function Pos({
   /** A scanned label adds one piece of that size/colour to the cart. */
   function onScan(text: string): ScanResult {
     const id = variantIdFromScan(text);
-    if (!id) return { ok: false, message: t.scan.unknown };
+    if (!id) return { ok: false, message: looksLikeWrongLayout(text) ? t.scan.wrongLayout : t.scan.unknown };
     const v = variantById.get(id);
     const p = v && productById.get(v.product_id);
     if (!v || !p) return { ok: false, message: t.scan.notFound };
@@ -116,6 +118,19 @@ export default function Pos({
     addToCart(id, 1);
     return { ok: true, message: t.scan.added(label) };
   }
+
+  // USB / Bluetooth scanner (types the code + Enter). Paused while the camera scanner is open.
+  const showScan = (text: string) => {
+    const result = onScan(text);
+    setScanNotice(result);
+    navigator.vibrate?.(result.ok ? 80 : [60, 60, 60]);
+  };
+  useScannerInput(showScan, !scanning);
+  useEffect(() => {
+    if (!scanNotice) return;
+    const timer = window.setTimeout(() => setScanNotice(null), 4000);
+    return () => window.clearTimeout(timer);
+  }, [scanNotice]);
 
   function setQty(variant_id: string, qty: number) {
     const max = variantById.get(variant_id)?.quantity ?? 0;
@@ -162,6 +177,15 @@ export default function Pos({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             enterKeyHint="search"
+            onKeyDown={(e) => {
+              // A scanner used while the search box is focused types the label + Enter here.
+              if (e.key !== "Enter" && e.key !== "Tab") return;
+              if (variantIdFromScan(query) || (query.length > 12 && looksLikeWrongLayout(query))) {
+                e.preventDefault();
+                showScan(query);
+                setQuery("");
+              }
+            }}
           />
         </label>
           <button type="button" className="btn-secondary shrink-0 px-4" onClick={() => setScanning(true)}>
@@ -170,6 +194,11 @@ export default function Pos({
           </button>
         </div>
         <QrScanner open={scanning} onClose={() => setScanning(false)} onScan={onScan} />
+        {scanNotice && (
+          <p role="status" className={`rounded-xl px-3 py-2 text-sm font-medium ${scanNotice.ok ? "bg-success/10 text-success" : "bg-danger/10 text-danger"}`}>
+            {scanNotice.message}
+          </p>
+        )}
         {results.length === 0 ? (
           <EmptyState>{t.sell.noProducts}</EmptyState>
         ) : (
