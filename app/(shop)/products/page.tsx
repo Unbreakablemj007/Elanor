@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { PlusIcon } from "@/components/icons";
+import { PlusIcon, PrinterIcon } from "@/components/icons";
 import { PageHeader } from "@/components/ui";
 import { getLists, getSettings, listProducts, listVariants } from "@/lib/db";
 import { t } from "@/lib/strings";
 import ProductList from "./ProductList";
+import ScanToOpen from "./ScanToOpen";
 
 export const metadata = { title: t.products.title };
 
@@ -21,10 +22,17 @@ export default async function ProductsPage() {
       <PageHeader
         title={t.products.title}
         action={
-          <Link href="/products/new" className="btn-primary btn-sm">
-            <PlusIcon width={18} height={18} />
-            {t.products.new}
-          </Link>
+          <div className="flex flex-wrap justify-end gap-2">
+            <ScanToOpen />
+            <Link href="/labels" className="btn-secondary btn-sm">
+              <PrinterIcon width={18} height={18} />
+              {t.labels.open}
+            </Link>
+            <Link href="/products/new" className="btn-primary btn-sm">
+              <PlusIcon width={18} height={18} />
+              {t.products.new}
+            </Link>
+          </div>
         }
       />
       <ProductList
