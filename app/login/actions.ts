@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { blockedFor, recordFailure, recordSuccess } from "@/lib/auth/rateLimit";
 import { createSessionToken, SESSION_COOKIE, sessionCookieOptions } from "@/lib/auth/session";
-import { getAuthUsers } from "@/lib/auth/users";
+import { authConfigProblem, getAuthUsers } from "@/lib/auth/users";
 import { t } from "@/lib/strings";
 
 const loginSchema = z.object({
@@ -36,8 +36,9 @@ export async function login(_prev: LoginState, formData: FormData): Promise<Logi
   if (!parsed.success) return { error: t.login.invalid, username: String(formData.get("username") ?? "").slice(0, 100) };
   const { username, password, next } = parsed.data;
 
+  const problem = authConfigProblem();
+  if (problem) return { error: t.login.misconfigured(problem), username };
   const users = getAuthUsers();
-  if (users.length === 0 || !process.env.AUTH_SECRET) return { error: t.login.misconfigured, username };
 
   const blockedMs = blockedFor(username);
   if (blockedMs > 0) return { error: t.login.blocked(Math.ceil(blockedMs / 60000)), username };

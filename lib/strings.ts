@@ -61,7 +61,8 @@ export const t = {
     invalid: "Wrong username or password.",
     blocked: (minutes: number) =>
       `Too many failed attempts. Try again in ${minutes} minute${minutes === 1 ? "" : "s"}.`,
-    misconfigured: "Login is not configured on the server. Check AUTH_USERS and AUTH_SECRET.",
+    misconfigured: (problem: string) =>
+      `Login is not set up on the server: ${problem}. Fix it in Vercel → Settings → Environment Variables, then redeploy.`,
   },
 
   dashboard: {
