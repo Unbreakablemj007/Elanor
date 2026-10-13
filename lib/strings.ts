@@ -200,6 +200,7 @@ export const t = {
     } as Record<string, string>,
     items: "Items",
     viewReceipt: "Receipt",
+    statusLabel: "Status",
     returnItems: "Return items",
     returnQty: "Return",
     returnConfirm: (n: number) => `Return ${n} item${n === 1 ? "" : "s"} to stock? This cannot be undone.`,

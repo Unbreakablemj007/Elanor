@@ -47,7 +47,7 @@ export default async function SalePage({ params }: { params: Promise<{ id: strin
 
         <section className="card space-y-3 text-sm">
           <div className="flex items-center justify-between">
-            <span className="text-muted">{t.sales.title}</span>
+            <span className="text-muted">{t.sales.statusLabel}</span>
             <Badge tone={statusTone(sale.status)}>{t.sales.status[sale.status]}</Badge>
           </div>
           <Row label={t.receipt.customer}>
