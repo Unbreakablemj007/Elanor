@@ -38,7 +38,8 @@ export default function Receipt({ data }: { data: ReceiptData }) {
     <div className="mx-auto max-w-sm space-y-4">
       <article className="card space-y-3 font-mono text-sm print:border-0 print:p-0">
         <header className="text-center font-sans">
-          <h2 className="font-brand text-2xl">{data.shopName}</h2>
+          <h2 className="sr-only">{data.shopName}</h2>
+          <img src="/brand/logo-badge.png" alt="" width={128} height={128} className="mx-auto mb-2 h-32 w-32 rounded-full" />
           <p className="text-xs text-muted">
             {t.receipt.sale} {data.saleId}
           </p>
@@ -103,6 +104,15 @@ function Line({ label, value, strong }: { label: string; value: string; strong?:
 }
 
 /** Render the receipt onto a canvas (no extra dependencies) and return a PNG. */
+function loadImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = src;
+  });
+}
+
 async function drawReceipt(d: ReceiptData): Promise<Blob> {
   const scale = 2;
   const width = 420;
@@ -112,8 +122,13 @@ async function drawReceipt(d: ReceiptData): Promise<Blob> {
   const accent = css.getPropertyValue("--color-brand").trim() || "#8f5f69";
 
   type Row = { left: string; right?: string; font?: string; align?: "center"; color?: string; gap?: number };
+  const logo = await loadImage("/brand/logo-ink.png").catch(() => null);
+  const logoW = 240;
+  const logoH = logo ? Math.round((logo.naturalHeight / logo.naturalWidth) * logoW) : 0;
   const rows: Row[] = [
-    { left: d.shopName, font: "bold 26px Georgia, serif", align: "center", color: accent, gap: 34 },
+    logo
+      ? { left: "", gap: logoH + 12 }
+      : { left: d.shopName, font: "bold 26px Georgia, serif", align: "center", color: accent, gap: 34 },
     { left: `${t.receipt.sale} ${d.saleId}`, font: "13px sans-serif", align: "center", color: "#7a6f6b" },
     { left: formatDateTime(d.date), font: "13px sans-serif", align: "center", color: "#7a6f6b" },
   ];
@@ -160,6 +175,7 @@ async function drawReceipt(d: ReceiptData): Promise<Blob> {
   ctx.textBaseline = "middle";
 
   let y = pad;
+  if (logo) ctx.drawImage(logo, (width - logoW) / 2, y, logoW, logoH);
   for (const r of rows) {
     const h = r.gap ?? lineHeight;
     const cy = y + h / 2;

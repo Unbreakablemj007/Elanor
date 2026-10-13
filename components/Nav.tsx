@@ -51,9 +51,14 @@ export function Sidebar({ shopName, username }: { shopName: string; username: st
   const pathname = usePathname();
   return (
     <aside className="no-print sticky top-0 hidden h-dvh w-60 shrink-0 flex-col border-r border-line bg-surface px-3 py-6 lg:flex">
-      <Link href="/" className="mb-8 px-3">
-        <span className="font-brand text-2xl tracking-wide">{shopName}</span>
-        <span className="block text-xs text-muted">{t.appTagline}</span>
+      <Link href="/" className="mb-8 flex items-center gap-3 px-2">
+        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#f5ede8] ring-1 ring-line">
+          <img src="/brand/mark-ink.png" alt="" width={40} height={40} className="h-10 w-10" />
+        </span>
+        <span className="min-w-0">
+          <span className="block truncate font-brand text-xl tracking-wide">{shopName}</span>
+          <span className="block text-xs text-muted">{t.appTagline}</span>
+        </span>
       </Link>
       <nav className="flex flex-1 flex-col gap-1">
         {sidebarItems.map(({ href, label, icon: Icon }) => {
