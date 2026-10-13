@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { PrinterIcon } from "@/components/icons";
 import { Badge, PageHeader } from "@/components/ui";
 import { formatDateTime } from "@/lib/dates";
 import { formatUsd } from "@/lib/format";
@@ -70,6 +71,10 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
             <dd className="text-right font-semibold">{total}</dd>
           </dl>
           {product.description && <p className="text-sm whitespace-pre-line text-muted">{product.description}</p>}
+          <Link href={`/labels?product=${id}`} className="btn-secondary btn-sm w-full">
+            <PrinterIcon width={18} height={18} />
+            {t.labels.printForProduct}
+          </Link>
           <ArchiveButton productId={id} active={product.active} />
         </section>
 

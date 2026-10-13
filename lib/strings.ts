@@ -311,6 +311,38 @@ export const t = {
     failed: "The photo could not be uploaded. Check the connection and try again.",
   },
 
+  labels: {
+    title: "QR labels",
+    open: "Labels",
+    printForProduct: "Print QR labels",
+    allProducts: "All products",
+    help: "Choose how many labels to print for each size. Print on A4 sticker sheets with 24 labels (3 × 8, 70 × 37 mm), then stick one on each item's tag.",
+    matchStock: "One per piece in stock",
+    onePerItem: "One per size",
+    clear: "None",
+    skip: "Skip labels already used on the sheet",
+    showPrice: "Show price",
+    inStock: (n: number) => `${n} in stock`,
+    none: "No products to label yet.",
+    print: (labels: number, sheets: number) =>
+      labels === 0 ? "Print" : `Print ${labels} label${labels === 1 ? "" : "s"} · ${sheets} sheet${sheets === 1 ? "" : "s"}`,
+    printTip: "In the print window choose A4, scale 100% (Actual size), no margins, and turn off headers and footers.",
+  },
+
+  scan: {
+    title: "Scan QR label",
+    button: "Scan",
+    hint: "Point the camera at the QR label.",
+    done: "Done",
+    added: (label: string) => `Added: ${label}`,
+    unknown: "This QR is not a Miss Elanor label.",
+    notFound: "This item is no longer in the shop.",
+    noStock: (label: string) => `No more stock of ${label}.`,
+    opening: (label: string) => `Opening ${label}…`,
+    denied: "Camera access was blocked. Allow the camera for this site in the browser settings, then try again.",
+    unavailable: "The camera could not be started on this device.",
+  },
+
   credit: {
     prefix: "Developed by",
     name: "MJ Automations",

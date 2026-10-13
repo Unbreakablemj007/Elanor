@@ -2,7 +2,9 @@
 
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
-import { MinusIcon, PlusIcon, SearchIcon, TrashIcon, XIcon } from "@/components/icons";
+import { MinusIcon, PlusIcon, QrIcon, SearchIcon, TrashIcon, XIcon } from "@/components/icons";
+import QrScanner, { type ScanResult } from "@/components/QrScanner";
+import { variantIdFromScan } from "@/lib/qr";
 import { Modal } from "@/components/Modal";
 import { EmptyState, ErrorBox } from "@/components/ui";
 import { formatInt, formatLbp, formatUsd, parseNumber, round2 } from "@/lib/format";
@@ -48,6 +50,7 @@ export default function Pos({
   const [changeIn, setChangeIn] = useState<"usd" | "lbp">("usd");
   const [notes, setNotes] = useState("");
   const [error, setError] = useState("");
+  const [scanning, setScanning] = useState(false);
 
   const productById = useMemo(() => new Map(products.map((p) => [p.product_id, p])), [products]);
   const variantById = useMemo(() => new Map(variants.map((v) => [v.variant_id, v])), [variants]);
@@ -101,6 +104,19 @@ export default function Pos({
     setError("");
   }
 
+  /** A scanned label adds one piece of that size/colour to the cart. */
+  function onScan(text: string): ScanResult {
+    const id = variantIdFromScan(text);
+    if (!id) return { ok: false, message: t.scan.unknown };
+    const v = variantById.get(id);
+    const p = v && productById.get(v.product_id);
+    if (!v || !p) return { ok: false, message: t.scan.notFound };
+    const label = [p.name, variantLabel(v)].filter(Boolean).join(" ");
+    if (inCart(id) + 1 > v.quantity) return { ok: false, message: t.scan.noStock(label) };
+    addToCart(id, 1);
+    return { ok: true, message: t.scan.added(label) };
+  }
+
   function setQty(variant_id: string, qty: number) {
     const max = variantById.get(variant_id)?.quantity ?? 0;
     const next = Math.min(Math.max(qty, 0), max);
@@ -135,7 +151,8 @@ export default function Pos({
     <div className="grid gap-5 lg:grid-cols-[1fr_24rem] lg:items-start">
       {/* Product search */}
       <section className="space-y-3">
-        <label className="relative block">
+        <div className="flex gap-2">
+        <label className="relative block flex-1">
           <span className="sr-only">{t.common.search}</span>
           <SearchIcon className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-muted" />
           <input
@@ -147,6 +164,12 @@ export default function Pos({
             enterKeyHint="search"
           />
         </label>
+          <button type="button" className="btn-secondary shrink-0 px-4" onClick={() => setScanning(true)}>
+            <QrIcon />
+            {t.scan.button}
+          </button>
+        </div>
+        <QrScanner open={scanning} onClose={() => setScanning(false)} onScan={onScan} />
         {results.length === 0 ? (
           <EmptyState>{t.sell.noProducts}</EmptyState>
         ) : (
