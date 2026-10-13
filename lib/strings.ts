@@ -336,6 +336,8 @@ export const t = {
     done: "Done",
     added: (label: string) => `Added: ${label}`,
     unknown: "This QR is not a Miss Elanor label.",
+    wrongLayout: "The scanner typed in another keyboard language. Switch the laptop keyboard to English (EN) and scan again.",
+    scannerReady: "USB scanner ready: scan a label any time on this page.",
     notFound: "This item is no longer in the shop.",
     noStock: (label: string) => `No more stock of ${label}.`,
     opening: (label: string) => `Opening ${label}…`,

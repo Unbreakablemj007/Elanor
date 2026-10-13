@@ -132,6 +132,7 @@ supabase/schema.sql      Full database schema, policies and functions
 
 - **Products → Labels** (all products) or **Print QR labels** on a product page opens `/labels`: choose how many labels per size, optionally skip labels already used on a sheet, then print on A4 sticker sheets of 24 (3 × 8, 70 × 37 mm). Print at 100% scale with no margins.
 - Each QR holds a link to `/v/<variant_id>`, so a normal phone camera opens that product in the app (after sign-in).
+- **USB / Bluetooth scanners** (2D / QR models, which type the code + Enter) work on Sell (adds to cart, even without clicking the search box) and Products (opens the item). The laptop keyboard must be set to English; otherwise the app says so.
 - **Sell → Scan** uses the phone camera (`jsqr`) to add one piece of the scanned size/colour to the cart; it refuses to go over stock. **Products → Scan** jumps to the scanned product.
 
 ### Conventions
