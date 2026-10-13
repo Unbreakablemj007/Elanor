@@ -74,7 +74,7 @@ To remove someone, delete their row in `staff` (or the user in Authentication). 
 
 ### Forgot password
 
-The login page has a **Forgot password?** link. It emails a reset link; the link opens `/auth/confirm`, which signs the person in and sends them to `/reset-password` to choose a new password. Signed-in staff can also change their password in **Settings**.
+**Currently switched off** (`PASSWORD_RESET_EMAIL_ENABLED` in `lib/features.ts`) until custom SMTP is set up; set it to `true` after step 3 below. When on, the login page has a **Forgot password?** link. It emails a reset link; the link opens `/auth/confirm`, which signs the person in and sends them to `/reset-password` to choose a new password. Signed-in staff can also change their password in **Settings**.
 
 One-time setup in Supabase:
 

@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import { blockedFor, recordFailure } from "@/lib/auth/rateLimit";
+import { PASSWORD_RESET_EMAIL_ENABLED } from "@/lib/features";
 import { createClient } from "@/lib/supabase/server";
 import { t } from "@/lib/strings";
 import { requestOrigin } from "@/lib/url";
@@ -11,6 +12,7 @@ export type ForgotState = { sent?: boolean; error?: string; email?: string };
 const schema = z.object({ email: z.string().trim().toLowerCase().email().max(200) });
 
 export async function requestPasswordReset(_prev: ForgotState, formData: FormData): Promise<ForgotState> {
+  if (!PASSWORD_RESET_EMAIL_ENABLED) return { error: t.common.unexpectedError };
   const typed = String(formData.get("email") ?? "").slice(0, 200);
   const parsed = schema.safeParse({ email: formData.get("email") });
   if (!parsed.success) return { error: t.forgot.invalidEmail, email: typed };
