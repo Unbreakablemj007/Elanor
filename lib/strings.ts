@@ -63,7 +63,7 @@ export const t = {
     blocked: (minutes: number) =>
       `Too many failed attempts. Try again in ${minutes} minute${minutes === 1 ? "" : "s"}.`,
     misconfigured: (problem: string) =>
-      `Login is not set up on the server: ${problem}. Fix it in Vercel → Settings → Environment Variables, then redeploy.`,
+      `Login is not set up on the server: ${problem.replace(/\.$/, "")}. Fix it in Vercel → Settings → Environment Variables, then redeploy.`,
     unavailable: "Could not reach the login service. Check your connection and try again.",
   },
 
