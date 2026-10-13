@@ -65,6 +65,7 @@ export const t = {
     misconfigured: (problem: string) =>
       `Login is not set up on the server: ${problem.replace(/\.$/, "")}. Fix it in Vercel → Settings → Environment Variables, then redeploy.`,
     unavailable: "Could not reach the login service. Check your connection and try again.",
+    forgot: "Forgot password?",
   },
 
   dashboard: {
@@ -268,6 +269,30 @@ export const t = {
     sheetHelp: "Edit categories, sizes, colors and expense categories in the lists table.",
     saved: "Settings saved.",
     signedInAs: (u: string) => `Signed in as ${u}`,
+  },
+
+  forgot: {
+    title: "Reset your password",
+    help: "Enter the email you sign in with. We will email you a link to choose a new password.",
+    submit: "Send reset link",
+    sending: "Sending…",
+    sent: (email: string) => `If ${email} has access to the shop, a reset link is on its way.`,
+    sentHelp: "Open the email on this phone or computer and tap the link. It works once and expires after an hour. Check your spam folder if it does not arrive within a few minutes.",
+    backToLogin: "Back to sign in",
+    invalidEmail: "Enter a valid email address.",
+    tooMany: "Too many reset emails were sent. Please wait a while and try again.",
+    linkInvalid: "That reset link is invalid or has expired. Request a new one below.",
+  },
+
+  reset: {
+    title: "Choose a new password",
+    help: (email: string) => `Set a new password for ${email}.`,
+    submit: "Save new password",
+  },
+
+  credit: {
+    prefix: "Developed by",
+    name: "MJ Automations",
   },
 
   password: {

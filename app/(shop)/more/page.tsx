@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { logout } from "@/app/login/actions";
 import { ChevronRightIcon, GearIcon, LogoutIcon, UsersIcon, WalletIcon } from "@/components/icons";
+import Credit from "@/components/Credit";
 import ThemeToggle from "@/components/ThemeToggle";
 import { PageHeader } from "@/components/ui";
 import { requireUser } from "@/lib/auth/current";
@@ -42,6 +43,7 @@ export default async function MorePage() {
           </form>
         </li>
       </ul>
+      <Credit className="mt-6 text-center" />
     </>
   );
 }

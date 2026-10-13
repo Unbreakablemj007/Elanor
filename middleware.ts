@@ -1,6 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 
+const PUBLIC_PATHS = ["/forgot-password", "/auth/confirm", "/reset-password"];
+
 export async function middleware(req: NextRequest) {
   const { pathname, search } = req.nextUrl;
   const { response, userId } = await updateSession(req);
@@ -15,6 +17,8 @@ export async function middleware(req: NextRequest) {
   if (pathname === "/login") {
     return userId ? redirectTo(new URL("/", req.url)) : response;
   }
+  // Password-reset pages work without a session (reset-password checks its own).
+  if (PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`))) return response;
 
   if (!userId) {
     const url = new URL("/login", req.url);
