@@ -15,6 +15,7 @@ import {
   UsersIcon,
   WalletIcon,
 } from "./icons";
+import Credit from "./Credit";
 import ThemeToggle from "./ThemeToggle";
 import { t } from "@/lib/strings";
 
@@ -82,6 +83,7 @@ export function Sidebar({ shopName, username }: { shopName: string; username: st
             {t.nav.logout}
           </button>
         </form>
+        <Credit className="mt-4" />
       </div>
     </aside>
   );

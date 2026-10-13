@@ -72,6 +72,16 @@ Notes:
 
 To remove someone, delete their row in `staff` (or the user in Authentication). Passwords are changed in Authentication → Users.
 
+### Forgot password
+
+The login page has a **Forgot password?** link. It emails a reset link; the link opens `/auth/confirm`, which signs the person in and sends them to `/reset-password` to choose a new password. Signed-in staff can also change their password in **Settings**.
+
+One-time setup in Supabase:
+
+1. **Authentication → URL Configuration**: set **Site URL** to the live address of the app, and add `https://<live address>/**` under **Redirect URLs**.
+2. **Authentication → Emails → Reset password**: paste [`supabase/templates/reset-password.html`](supabase/templates/reset-password.html) as the message body. Its link works on any device; the default template only works when the email is opened in the same browser that asked for it.
+3. **Authentication → Emails → SMTP Settings**: turn on custom SMTP. Supabase's built-in sender only delivers to members of the Supabase organization, so without this, staff never receive the email. A Gmail account with an app password works: host `smtp.gmail.com`, port `587`, username = the Gmail address, password = the 16-character app password.
+
 Sessions are handled by Supabase Auth (cookies refreshed by `middleware.ts`). After 5 wrong passwords for an email the app blocks it for 15 minutes (in server memory), on top of Supabase's own rate limits.
 
 ---
@@ -96,6 +106,9 @@ Open the deployed URL and log in, then:
 ```
 app/
   login/                 Login page + login/logout server actions (Supabase Auth)
+  forgot-password/       Request a password-reset email
+  auth/confirm/          Landing route for links in Supabase emails
+  reset-password/        Choose a new password after following the email link
   (shop)/                Everything behind login (shared nav layout)
     page.tsx             Dashboard
     sell/                POS screen + createSale action

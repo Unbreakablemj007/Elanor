@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { blockedFor, recordFailure, recordSuccess } from "@/lib/auth/rateLimit";
 import { createClient } from "@/lib/supabase/server";
+import { safeNext } from "@/lib/url";
 import { t } from "@/lib/strings";
 
 const loginSchema = z.object({
@@ -13,12 +14,6 @@ const loginSchema = z.object({
 });
 
 export type LoginState = { error?: string; email?: string };
-
-function safeNext(next: string | undefined): string {
-  // Only allow same-site relative paths.
-  if (!next || !next.startsWith("/") || next.startsWith("//") || next.startsWith("/\\")) return "/";
-  return next;
-}
 
 export async function login(_prev: LoginState, formData: FormData): Promise<LoginState> {
   const typed = String(formData.get("email") ?? "").slice(0, 200);
