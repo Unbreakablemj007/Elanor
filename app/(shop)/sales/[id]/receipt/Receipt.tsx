@@ -109,7 +109,7 @@ async function drawReceipt(d: ReceiptData): Promise<Blob> {
   const pad = 24;
   const mono = "15px ui-monospace, Menlo, Consolas, monospace";
   const css = getComputedStyle(document.documentElement);
-  const accent = css.getPropertyValue("--color-accent-strong").trim() || "#8f5f69";
+  const accent = css.getPropertyValue("--color-brand").trim() || "#8f5f69";
 
   type Row = { left: string; right?: string; font?: string; align?: "center"; color?: string; gap?: number };
   const rows: Row[] = [

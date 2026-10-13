@@ -96,7 +96,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           <Link
             key={key}
             href={key === "today" ? "/" : `/?period=${key}`}
-            className={`flex min-h-10 items-center justify-center rounded-lg text-sm font-medium ${period === key ? "bg-accent-strong text-white" : "text-muted"}`}
+            className={`flex min-h-10 items-center justify-center rounded-lg text-sm font-medium ${period === key ? "bg-accent-strong text-on-accent" : "text-muted"}`}
             aria-current={period === key ? "page" : undefined}
           >
             {label}

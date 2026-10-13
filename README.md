@@ -164,4 +164,4 @@ scripts/hash-password.mjs
 
 ### Branding
 
-Colours are CSS variables at the top of `app/globals.css` (`--color-accent`, `--color-bg`, …) and are exposed as Tailwind tokens (`bg-accent`, `text-muted`, …). Change them there when the final brand colours are ready. App icons are in `public/icons/` and `public/apple-touch-icon.png`, and the manifest colours are in `app/manifest.ts`.
+Colours are CSS variables at the top of `app/globals.css` (a light set and a matching dark set; users pick Light / Dark / Automatic in Settings or More) (`--color-accent`, `--color-bg`, …) and are exposed as Tailwind tokens (`bg-accent`, `text-muted`, …). Change them there when the final brand colours are ready. App icons are in `public/icons/` and `public/apple-touch-icon.png`, and the manifest colours are in `app/manifest.ts`.

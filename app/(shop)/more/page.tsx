@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { logout } from "@/app/login/actions";
 import { ChevronRightIcon, GearIcon, LogoutIcon, UsersIcon, WalletIcon } from "@/components/icons";
+import ThemeToggle from "@/components/ThemeToggle";
 import { PageHeader } from "@/components/ui";
 import { requireUser } from "@/lib/auth/current";
 import { t } from "@/lib/strings";
@@ -18,6 +19,10 @@ export default async function MorePage() {
   return (
     <>
       <PageHeader title={t.nav.more} subtitle={t.settings.signedInAs(username)} />
+      <section className="card mb-4 space-y-2">
+        <h2 className="text-sm font-medium text-muted">{t.theme.title}</h2>
+        <ThemeToggle />
+      </section>
       <ul className="card divide-y divide-line p-0">
         {links.map(({ href, label, icon: Icon }) => (
           <li key={href}>

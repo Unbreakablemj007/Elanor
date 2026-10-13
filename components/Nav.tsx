@@ -15,6 +15,7 @@ import {
   UsersIcon,
   WalletIcon,
 } from "./icons";
+import ThemeToggle from "./ThemeToggle";
 import { t } from "@/lib/strings";
 
 type Item = { href: string; label: string; icon: ComponentType<SVGProps<SVGSVGElement>> };
@@ -70,6 +71,9 @@ export function Sidebar({ shopName, username }: { shopName: string; username: st
           );
         })}
       </nav>
+      <div className="mb-4 px-1">
+        <ThemeToggle compact />
+      </div>
       <div className="border-t border-line px-3 pt-4 text-xs text-muted">
         <p className="mb-2">{t.settings.signedInAs(username)}</p>
         <form action={logout}>

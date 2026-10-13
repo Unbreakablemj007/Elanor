@@ -247,6 +247,14 @@ export const t = {
     convertedAt: (rate: string) => `Converted at ${rate} per $1`,
   },
 
+  theme: {
+    title: "Appearance",
+    light: "Light",
+    dark: "Dark",
+    system: "Automatic",
+    help: "Automatic follows the phone or laptop setting. Saved on this device.",
+  },
+
   settings: {
     title: "Settings",
     exchangeRate: "Exchange rate (LBP per $1)",

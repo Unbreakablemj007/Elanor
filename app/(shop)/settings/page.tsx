@@ -1,4 +1,5 @@
 import { SheetIcon } from "@/components/icons";
+import ThemeToggle from "@/components/ThemeToggle";
 import { PageHeader } from "@/components/ui";
 import { requireUser } from "@/lib/auth/current";
 import { formatInt } from "@/lib/format";
@@ -17,6 +18,11 @@ export default async function SettingsPage() {
       <PageHeader title={t.settings.title} subtitle={t.settings.signedInAs(username)} back="/more" />
       <div className="space-y-4">
         <SettingsForm rate={settings.exchange_rate_lbp_per_usd} lowStockDefault={settings.low_stock_default} />
+        <section className="card space-y-2">
+          <h2 className="font-semibold">{t.theme.title}</h2>
+          <ThemeToggle />
+          <p className="text-xs text-muted">{t.theme.help}</p>
+        </section>
         <section className="card space-y-2 text-sm">
           <p className="flex justify-between">
             <span className="text-muted">{t.settings.lbpRounding}</span>

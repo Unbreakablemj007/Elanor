@@ -225,7 +225,7 @@ export default function Pos({
                   <button
                     key={type}
                     type="button"
-                    className={`min-h-10 w-11 rounded-lg text-sm font-medium ${discountType === type ? "bg-accent-strong text-white" : ""}`}
+                    className={`min-h-10 w-11 rounded-lg text-sm font-medium ${discountType === type ? "bg-accent-strong text-on-accent" : ""}`}
                     onClick={() => setDiscountType(type)}
                   >
                     {type === "usd" ? t.sell.discountUsd : t.sell.discountPct}

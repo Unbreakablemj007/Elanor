@@ -3,8 +3,11 @@
 /*
  * Brand tokens. Placeholder palette until the Miss Elanor logo/colours arrive:
  * change the values below and the whole app follows.
+ * Light theme is the default; the dark block below mirrors it.
  */
 :root {
+  /* Fixed brand colour for things outside the theme (receipt image). */
+  --color-brand: #8f5f69;
   --color-bg: #faf7f5;
   --color-surface: #ffffff;
   --color-ink: #2b2523;
@@ -13,9 +16,45 @@
   --color-accent: #b5838d;
   --color-accent-strong: #8f5f69;
   --color-accent-soft: #f4e7e9;
+  --color-on-accent: #ffffff;
   --color-success: #3f7d58;
   --color-warning: #b7791f;
   --color-danger: #b4433b;
+  color-scheme: light;
+}
+
+/* Dark theme: chosen in Settings, or "Automatic" when the device is in dark mode. */
+:root[data-theme="dark"] {
+  --color-bg: #141112;
+  --color-surface: #1e1a1b;
+  --color-ink: #f1eae8;
+  --color-muted: #a89c98;
+  --color-line: #342c2e;
+  --color-accent: #b98591;
+  --color-accent-strong: #d29ba7;
+  --color-accent-soft: #3a2a2e;
+  --color-on-accent: #1a1214;
+  --color-success: #5cb87f;
+  --color-warning: #e0a84a;
+  --color-danger: #e5675e;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-bg: #141112;
+    --color-surface: #1e1a1b;
+    --color-ink: #f1eae8;
+    --color-muted: #a89c98;
+    --color-line: #342c2e;
+    --color-accent: #b98591;
+    --color-accent-strong: #d29ba7;
+    --color-accent-soft: #3a2a2e;
+    --color-on-accent: #1a1214;
+    --color-success: #5cb87f;
+    --color-warning: #e0a84a;
+    --color-danger: #e5675e;
+    color-scheme: dark;
+  }
 }
 
 @theme inline {
@@ -27,6 +66,7 @@
   --color-accent: var(--color-accent);
   --color-accent-strong: var(--color-accent-strong);
   --color-accent-soft: var(--color-accent-soft);
+  --color-on-accent: var(--color-on-accent);
   --color-success: var(--color-success);
   --color-warning: var(--color-warning);
   --color-danger: var(--color-danger);
@@ -58,7 +98,7 @@ input[type="number"]::-webkit-outer-spin-button {
   @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-xl px-4 text-base font-medium transition active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50;
 }
 @utility btn-primary {
-  @apply btn bg-accent-strong text-white hover:bg-accent;
+  @apply btn bg-accent-strong text-on-accent hover:bg-accent;
 }
 @utility btn-secondary {
   @apply btn border border-line bg-surface text-ink hover:bg-accent-soft;
@@ -79,10 +119,26 @@ input[type="number"]::-webkit-outer-spin-button {
   @apply inline-flex min-h-10 items-center justify-center rounded-full border border-line bg-surface px-4 text-sm;
 }
 @utility chip-active {
-  @apply border-accent-strong bg-accent-strong text-white;
+  @apply border-accent-strong bg-accent-strong text-on-accent;
 }
 
 @media print {
+  :root,
+  :root[data-theme="dark"] {
+    --color-bg: #faf7f5;
+    --color-surface: #ffffff;
+    --color-ink: #2b2523;
+    --color-muted: #7a6f6b;
+    --color-line: #ebe3df;
+    --color-accent: #b5838d;
+    --color-accent-strong: #8f5f69;
+    --color-accent-soft: #f4e7e9;
+    --color-on-accent: #ffffff;
+    --color-success: #3f7d58;
+    --color-warning: #b7791f;
+    --color-danger: #b4433b;
+    color-scheme: light;
+  }
   .no-print {
     display: none !important;
   }

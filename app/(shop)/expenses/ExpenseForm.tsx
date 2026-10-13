@@ -63,7 +63,7 @@ export default function ExpenseForm({ categories, rate, today }: { categories: s
               <button
                 key={c}
                 type="button"
-                className={`min-h-10 rounded-lg px-3 text-sm font-medium ${currency === c ? "bg-accent-strong text-white" : ""}`}
+                className={`min-h-10 rounded-lg px-3 text-sm font-medium ${currency === c ? "bg-accent-strong text-on-accent" : ""}`}
                 onClick={() => setCurrency(c)}
                 aria-pressed={currency === c}
               >

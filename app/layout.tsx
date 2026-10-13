@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { themeInitScript } from "@/lib/theme";
 import { t } from "@/lib/strings";
 
 export const metadata: Metadata = {
@@ -15,12 +16,19 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#faf7f5",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#faf7f5" },
+    { media: "(prefers-color-scheme: dark)", color: "#141112" },
+  ],
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    // data-theme is set before hydration by the inline script.
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body className="min-h-dvh font-sans antialiased">{children}</body>
     </html>
   );

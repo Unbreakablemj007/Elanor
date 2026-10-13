@@ -28,7 +28,7 @@ export function BarChart({
                 className="w-full rounded-t-[4px] bg-accent-strong transition-opacity group-hover:opacity-80"
                 style={{ height: d.value > 0 ? `max(${pct}%, 2px)` : 0 }}
               />
-              <div className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-1 hidden -translate-x-1/2 rounded-lg bg-ink px-2 py-1 text-xs whitespace-nowrap text-white group-hover:block">
+              <div className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-1 hidden -translate-x-1/2 rounded-lg bg-ink px-2 py-1 text-xs whitespace-nowrap text-bg group-hover:block">
                 {d.label}: {format(d.value)}
               </div>
               {d.key === peak.key && d.value > 0 && (
