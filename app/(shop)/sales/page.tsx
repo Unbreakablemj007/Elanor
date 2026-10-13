@@ -30,7 +30,7 @@ export default async function SalesPage({ searchParams }: { searchParams: Promis
 
   return (
     <>
-      <PageHeader title={t.sales.title} subtitle={`${t.sales.count(inRange.length)} · ${formatUsd(net)}`} />
+      <PageHeader title={t.sales.title} subtitle={`${t.sales.count(inRange.filter((s) => s.status !== "returned").length)} · ${formatUsd(net)}`} />
 
       <form className="card mb-4 grid grid-cols-2 gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end" method="get">
         <div>

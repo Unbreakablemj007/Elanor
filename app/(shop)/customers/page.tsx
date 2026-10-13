@@ -16,7 +16,7 @@ export default async function CustomersPage() {
     if (!s.customer_id) continue;
     const st = stats.get(s.customer_id) ?? { spent: 0, count: 0 };
     st.spent += saleNet(s, itemsBySale.get(s.sale_id) ?? []).revenue;
-    st.count += 1;
+    if (s.status !== "returned") st.count += 1;
     stats.set(s.customer_id, st);
   }
 
