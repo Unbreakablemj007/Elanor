@@ -42,3 +42,11 @@ export async function addListValue(list: keyof Lists, value: string): Promise<st
   invalidate();
   return value;
 }
+
+/** Remove a value from a dropdown list. Records that already use it keep it. */
+export async function removeListValue(list: keyof Lists, value: string): Promise<void> {
+  const supabase = await db();
+  const { error } = await supabase.from("lists").delete().eq("list_name", list).eq("value", value);
+  check(error, "remove list value");
+  invalidate();
+}

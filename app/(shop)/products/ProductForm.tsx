@@ -5,6 +5,7 @@ import { useState, useTransition } from "react";
 import { PlusIcon, TrashIcon } from "@/components/icons";
 import AddOption from "@/components/AddOption";
 import ImageUpload from "@/components/ImageUpload";
+import RemoveOption from "@/components/RemoveOption";
 import { ErrorBox } from "@/components/ui";
 import { formatUsd, parseNumber } from "@/lib/format";
 import { t } from "@/lib/strings";
@@ -141,14 +142,26 @@ export default function ProductForm({
             <label className="label" htmlFor="category">
               {t.products.category}
             </label>
-            <AddOption
-              list="categories"
-              title={t.addOption.category}
-              onAdded={(v) => {
-                addTo(setCategoryList, v);
-                setCategory(v);
-              }}
-            />
+            <div className="flex gap-1.5">
+              <RemoveOption
+                list="categories"
+                value={category}
+                listLabel={t.removeOption.category}
+                inList={categoryList.includes(category)}
+                onRemoved={(v) => {
+                  setCategoryList((l) => l.filter((x) => x !== v));
+                  setCategory("");
+                }}
+              />
+              <AddOption
+                list="categories"
+                title={t.addOption.category}
+                onAdded={(v) => {
+                  addTo(setCategoryList, v);
+                  setCategory(v);
+                }}
+              />
+            </div>
           </div>
           <select id="category" className="input" value={category} onChange={(e) => setCategory(e.target.value)}>
             <option value="">—</option>
@@ -196,14 +209,26 @@ export default function ProductForm({
               <div>
                 <div className="flex items-center justify-between">
                   <label className="label">{t.common.size}</label>
-                  <AddOption
-                    list="sizes"
-                    title={t.addOption.size}
-                    onAdded={(v) => {
-                      addTo(setSizeList, v);
-                      updateRow(r.key, { size: v });
-                    }}
-                  />
+                  <div className="flex gap-1.5">
+                    <RemoveOption
+                      list="sizes"
+                      value={r.size}
+                      listLabel={t.removeOption.size}
+                      inList={sizeList.includes(r.size)}
+                      onRemoved={(v) => {
+                        setSizeList((l) => l.filter((x) => x !== v));
+                        updateRow(r.key, { size: "" });
+                      }}
+                    />
+                    <AddOption
+                      list="sizes"
+                      title={t.addOption.size}
+                      onAdded={(v) => {
+                        addTo(setSizeList, v);
+                        updateRow(r.key, { size: v });
+                      }}
+                    />
+                  </div>
                 </div>
                 <select className="input" value={r.size} onChange={(e) => updateRow(r.key, { size: e.target.value })} required>
                   <option value="">—</option>
@@ -217,14 +242,26 @@ export default function ProductForm({
               <div>
                 <div className="flex items-center justify-between">
                   <label className="label">{t.common.color}</label>
-                  <AddOption
-                    list="colors"
-                    title={t.addOption.color}
-                    onAdded={(v) => {
-                      addTo(setColorList, v);
-                      updateRow(r.key, { color: v });
-                    }}
-                  />
+                  <div className="flex gap-1.5">
+                    <RemoveOption
+                      list="colors"
+                      value={r.color}
+                      listLabel={t.removeOption.color}
+                      inList={colorList.includes(r.color)}
+                      onRemoved={(v) => {
+                        setColorList((l) => l.filter((x) => x !== v));
+                        updateRow(r.key, { color: "" });
+                      }}
+                    />
+                    <AddOption
+                      list="colors"
+                      title={t.addOption.color}
+                      onAdded={(v) => {
+                        addTo(setColorList, v);
+                        updateRow(r.key, { color: v });
+                      }}
+                    />
+                  </div>
                 </div>
                 <select className="input" value={r.color} onChange={(e) => updateRow(r.key, { color: e.target.value })}>
                   <option value="">—</option>
