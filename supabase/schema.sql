@@ -405,7 +405,7 @@ insert into public.lists (list_name, value, sort_order) values
   ('sizes','40',140),('sizes','42',142),('sizes','44',144),
   ('colors','Black',1),('colors','White',2),('colors','Beige',3),('colors','Navy',4),
   ('colors','Red',5),('colors','Pink',6),('colors','Green',7),
-  ('colors','Blue',8),('colors','Light Blue',9),('colors','Burgundy',10),
+  ('colors','Blue',8),('colors','Light Blue',9),('colors','Burgundy',10),('colors','Grey',11),('colors','Brown',12),
   ('expense_categories','Rent',1),('expense_categories','Electricity / Generator',2),
   ('expense_categories','Salaries',3),('expense_categories','Supplier payment',4),
   ('expense_categories','Shipping / Delivery',5),('expense_categories','Marketing',6),
