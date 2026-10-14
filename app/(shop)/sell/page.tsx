@@ -34,6 +34,7 @@ export default async function SellPage() {
         rate={settings.exchange_rate_lbp_per_usd}
         rounding={settings.lbp_rounding}
         sizes={lists.sizes}
+        categories={lists.categories}
       />
     </>
   );

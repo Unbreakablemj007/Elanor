@@ -29,6 +29,7 @@ export default function Pos({
   rate,
   rounding,
   sizes,
+  categories,
 }: {
   products: PosProduct[];
   variants: PosVariant[];
@@ -36,10 +37,12 @@ export default function Pos({
   rate: number;
   rounding: number;
   sizes: string[];
+  categories: string[];
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [query, setQuery] = useState("");
+  const [category, setCategory] = useState<string | null>(null); // null = All
   const [picking, setPicking] = useState<PosProduct | null>(null);
   const [cart, setCart] = useState<CartLine[]>([]);
   const [customer, setCustomer] = useState<PosCustomer | null>(null);
@@ -83,17 +86,34 @@ export default function Pos({
   const hasPayment = pUsd > 0 || pLbp > 0;
   const canConfirm = lines.length > 0 && payment.sufficient && (hasPayment || total === 0) && !pending;
 
+  // Category tabs: the shop's list order first, then any category only found on
+  // products; "Other" collects products with no category. Empty tabs are hidden.
+  const categoryOf = (p: PosProduct) => p.category.trim() || t.sell.otherCategory;
+  const categoryTabs = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const p of products) counts.set(categoryOf(p), (counts.get(categoryOf(p)) ?? 0) + 1);
+    const order = [...categories, ...[...counts.keys()].filter((c) => !categories.includes(c)).sort()];
+    return order.filter((c) => counts.has(c)).map((c) => ({ name: c, count: counts.get(c) ?? 0 }));
+  }, [products, categories]);
+
+  const q = query.trim().toLowerCase();
+  // Every product is listed (no cap). Typing searches all categories.
   const results = useMemo(() => {
-    const q = query.trim().toLowerCase();
     return products
-      .filter((p) => !q || p.name.toLowerCase().includes(q) || p.category.toLowerCase().includes(q))
+      .filter((p) =>
+        q ? p.name.toLowerCase().includes(q) || p.category.toLowerCase().includes(q) : !category || categoryOf(p) === category,
+      )
       .sort((a, b) => {
         const sa = (stockByProduct.get(a.product_id) ?? 0) > 0 ? 0 : 1;
         const sb = (stockByProduct.get(b.product_id) ?? 0) > 0 ? 0 : 1;
         return sa - sb || a.name.localeCompare(b.name);
-      })
-      .slice(0, q ? 30 : 12);
-  }, [products, query, stockByProduct]);
+      });
+  }, [products, q, category, stockByProduct]);
+
+  const pickCategory = (c: string | null) => {
+    setCategory(c);
+    setQuery("");
+  };
 
   function addToCart(variant_id: string, qty: number) {
     setCart((c) => {
@@ -165,7 +185,7 @@ export default function Pos({
   return (
     <div className="grid gap-5 lg:grid-cols-[1fr_24rem] lg:items-start">
       {/* Product search */}
-      <section className="space-y-3">
+      <section className="min-w-0 space-y-3">
         <div className="flex gap-2">
         <label className="relative block flex-1">
           <span className="sr-only">{t.common.search}</span>
@@ -199,8 +219,26 @@ export default function Pos({
             {scanNotice.message}
           </p>
         )}
+        {categoryTabs.length > 1 && (
+          <nav aria-label={t.sell.categories} className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+            <ul className="flex gap-2 pb-1 sm:flex-wrap">
+              {[{ name: null as string | null, label: t.common.all, count: products.length }, ...categoryTabs.map((c) => ({ ...c, label: c.name }))].map((c) => {
+                const active = !q && category === c.name;
+                return (
+                  <li key={c.name ?? "__all"} className="shrink-0">
+                    <button type="button" className={`chip gap-1.5 whitespace-nowrap ${active ? "chip-active" : ""}`} aria-pressed={active} onClick={() => pickCategory(c.name)}>
+                      {c.label}
+                      <span className={`text-xs ${active ? "opacity-80" : "text-muted"}`}>{c.count}</span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </nav>
+        )}
+        {q && <p className="text-xs text-muted">{t.sell.searchingAll(query.trim())}</p>}
         {results.length === 0 ? (
-          <EmptyState>{t.sell.noProducts}</EmptyState>
+          <EmptyState>{q || !category ? t.sell.noProducts : t.sell.noProductsInCategory}</EmptyState>
         ) : (
           <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3">
             {results.map((p) => {
