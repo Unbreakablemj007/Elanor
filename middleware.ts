@@ -1,11 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { cashierMayOpen } from "@/lib/auth/roles";
 import { updateSession } from "@/lib/supabase/middleware";
 
 const PUBLIC_PATHS = ["/forgot-password", "/auth/confirm", "/reset-password"];
 
 export async function middleware(req: NextRequest) {
   const { pathname, search } = req.nextUrl;
-  const { response, userId } = await updateSession(req);
+  const { response, userId, role } = await updateSession(req);
 
   // Keep refreshed session cookies on redirects too.
   const redirectTo = (url: URL) => {
@@ -25,6 +26,9 @@ export async function middleware(req: NextRequest) {
     if (pathname !== "/") url.searchParams.set("next", pathname + search);
     return redirectTo(url);
   }
+  // Cashiers only get the Sell screen (and receipts). The database enforces
+  // the same limits (RLS), so this is about not showing them other pages.
+  if (role === "cashier" && !cashierMayOpen(pathname)) return redirectTo(new URL("/sell", req.url));
   // Pages also check the staff list (requireUser) and the database enforces it (RLS).
   return response;
 }

@@ -6,11 +6,14 @@ import { formatUsd } from "@/lib/format";
 import { bySize, isLowStock, variantLabel } from "@/lib/inventory";
 import { groupBy, saleNet } from "@/lib/reports";
 import { getLists, getSettings, listExpenses, listProducts, listSaleItems, listSales, listVariants } from "@/lib/db";
+import { redirect } from "next/navigation";
+import { getCurrentStaff } from "@/lib/auth/current";
 import { t } from "@/lib/strings";
 
 type Period = "today" | "week" | "month";
 
 export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ period?: string }> }) {
+  if ((await getCurrentStaff())?.role === "cashier") redirect("/sell");
   const { period: raw } = await searchParams;
   const period: Period = raw === "week" || raw === "month" ? raw : "today";
 

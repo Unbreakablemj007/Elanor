@@ -14,6 +14,8 @@
 create table if not exists public.staff (
   user_id uuid primary key references auth.users(id) on delete cascade,
   display_name text not null,
+  -- 'owner' sees and changes everything; 'cashier' can only make sales.
+  role text not null default 'owner' check (role in ('owner', 'cashier')),
   created_at timestamptz not null default now()
 );
 
@@ -27,6 +29,13 @@ language sql stable security definer set search_path = ''
 as $$ select exists (select 1 from public.staff where user_id = auth.uid()); $$;
 revoke execute on function private.is_staff() from public, anon;
 grant execute on function private.is_staff() to authenticated;
+
+create or replace function private.is_owner()
+returns boolean
+language sql stable security definer set search_path = ''
+as $$ select exists (select 1 from public.staff where user_id = auth.uid() and role = 'owner'); $$;
+revoke execute on function private.is_owner() from public, anon;
+grant execute on function private.is_owner() to authenticated;
 
 -- ---------- Settings and dropdown lists --------------------------------------
 create table public.settings (
@@ -167,6 +176,26 @@ drop policy if exists "staff can read staff list" on public.staff;
 create policy "staff can read staff list" on public.staff
   for select to authenticated using ((select private.is_staff()));
 
+-- Cashiers: restrictive policies are AND-ed with "staff full access", so they
+-- keep read access (catalogue, customers, sales for receipts) but every change
+-- other than recording a sale (record_sale) or adding a customer needs an owner.
+do $$
+declare tbl text;
+begin
+  foreach tbl in array array['products','variants','lists','settings','sales','sale_items'] loop
+    execute format('create policy "owners insert" on public.%I as restrictive for insert to authenticated with check ((select private.is_owner()))', tbl);
+    execute format('create policy "owners update" on public.%I as restrictive for update to authenticated using ((select private.is_owner())) with check ((select private.is_owner()))', tbl);
+    execute format('create policy "owners delete" on public.%I as restrictive for delete to authenticated using ((select private.is_owner()))', tbl);
+  end loop;
+  foreach tbl in array array['expenses','stock_movements'] loop
+    execute format('create policy "owners only" on public.%I as restrictive for all to authenticated using ((select private.is_owner())) with check ((select private.is_owner()))', tbl);
+  end loop;
+end $$;
+create policy "owners update" on public.customers as restrictive for update to authenticated
+  using ((select private.is_owner())) with check ((select private.is_owner()));
+create policy "owners delete" on public.customers as restrictive for delete to authenticated
+  using ((select private.is_owner()));
+
 -- ---------- Atomic write functions (run as the signed-in user, RLS applies) --
 
 -- Apply stock movements: change each variant's quantity (never below zero)
@@ -209,11 +238,14 @@ revoke execute on function private.apply_movements(jsonb) from public, anon;
 grant execute on function private.apply_movements(jsonb) to authenticated;
 
 -- Save a sale, its lines and the stock decrease in one go.
+-- Runs with the function owner's rights after checking the caller is staff, so
+-- cashiers can sell without direct write access to sales, items or stock.
 create or replace function public.record_sale(p_sale jsonb, p_items jsonb, p_movements jsonb)
 returns text
-language plpgsql security invoker set search_path = ''
+language plpgsql security definer set search_path = ''
 as $$
 begin
+  if not private.is_staff() then raise exception 'Not authorized'; end if;
   insert into public.sales select * from jsonb_populate_record(null::public.sales, p_sale);
   insert into public.sale_items select * from jsonb_populate_recordset(null::public.sale_items, p_items);
   perform private.apply_movements(p_movements);
@@ -347,6 +379,13 @@ create policy "staff update product images" on storage.objects
 create policy "staff delete product images" on storage.objects
   for delete to authenticated
   using (bucket_id = 'product-images' and (select private.is_staff()));
+-- Only owners change product photos.
+create policy "owners write product images" on storage.objects as restrictive for insert to authenticated
+  with check (bucket_id <> 'product-images' or (select private.is_owner()));
+create policy "owners update product images" on storage.objects as restrictive for update to authenticated
+  using (bucket_id <> 'product-images' or (select private.is_owner()));
+create policy "owners delete product images" on storage.objects as restrictive for delete to authenticated
+  using (bucket_id <> 'product-images' or (select private.is_owner()));
 
 -- ---------- Starting values --------------------------------------------------
 insert into public.settings (key, value, description) values

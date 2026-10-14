@@ -17,6 +17,7 @@ import {
 } from "./icons";
 import Credit from "./Credit";
 import ThemeToggle from "./ThemeToggle";
+import type { Role } from "@/lib/auth/roles";
 import { t } from "@/lib/strings";
 
 type Item = { href: string; label: string; icon: ComponentType<SVGProps<SVGSVGElement>> };
@@ -47,7 +48,7 @@ function isActive(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function Sidebar({ shopName, username }: { shopName: string; username: string }) {
+export function Sidebar({ shopName, username, role }: { shopName: string; username: string; role: Role }) {
   const pathname = usePathname();
   return (
     <aside className="no-print sticky top-0 hidden h-dvh w-60 shrink-0 flex-col border-r border-line bg-surface px-3 py-6 lg:flex">
@@ -61,7 +62,7 @@ export function Sidebar({ shopName, username }: { shopName: string; username: st
         </span>
       </Link>
       <nav className="flex flex-1 flex-col gap-1">
-        {sidebarItems.map(({ href, label, icon: Icon }) => {
+        {(role === "cashier" ? sidebarItems.filter((i) => i.href === "/sell") : sidebarItems).map(({ href, label, icon: Icon }) => {
           const active = isActive(pathname, href);
           return (
             <Link
@@ -94,8 +95,27 @@ export function Sidebar({ shopName, username }: { shopName: string; username: st
   );
 }
 
-export function BottomNav() {
+export function BottomNav({ role }: { role: Role }) {
   const pathname = usePathname();
+  if (role === "cashier") {
+    // Cashiers only sell: show Sell and a way to log out.
+    return (
+      <nav className="no-print fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden">
+        <div className="mx-auto grid max-w-lg grid-cols-2">
+          <Link href="/sell" className="flex min-h-16 flex-col items-center justify-center gap-1 text-[11px] font-medium text-accent-strong">
+            <CartIcon />
+            {t.nav.sell}
+          </Link>
+          <form action={logout} className="contents">
+            <button type="submit" className="flex min-h-16 flex-col items-center justify-center gap-1 text-[11px] font-medium text-muted">
+              <LogoutIcon />
+              {t.nav.logout}
+            </button>
+          </form>
+        </div>
+      </nav>
+    );
+  }
   return (
     <nav className="no-print fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden">
       <ul className="mx-auto grid max-w-lg grid-cols-5">

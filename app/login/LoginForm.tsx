@@ -17,11 +17,11 @@ export default function LoginForm({ next }: { next?: string }) {
         <input
           id="email"
           name="email"
-          type="email"
+          type="text"
           inputMode="email"
           className="input"
           defaultValue={state.email}
-          autoComplete="email"
+          autoComplete="username"
           autoCapitalize="none"
           autoCorrect="off"
           spellCheck={false}
