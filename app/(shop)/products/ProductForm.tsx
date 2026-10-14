@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { PlusIcon, TrashIcon } from "@/components/icons";
+import AddOption from "@/components/AddOption";
 import ImageUpload from "@/components/ImageUpload";
 import { ErrorBox } from "@/components/ui";
 import { formatUsd, parseNumber } from "@/lib/format";
@@ -56,6 +57,12 @@ export default function ProductForm({
   const [error, setError] = useState("");
 
   const [name, setName] = useState(initial?.name ?? "");
+  // Option lists can grow while the form is open (the + buttons).
+  const [categoryList, setCategoryList] = useState(categories);
+  const [sizeList, setSizeList] = useState(sizes);
+  const [colorList, setColorList] = useState(colors);
+  const addTo = (setList: (fn: (l: string[]) => string[]) => void, v: string) =>
+    setList((l) => (l.includes(v) ? l : [...l, v]));
   const [category, setCategory] = useState(initial?.category ?? categories[0] ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
   const [cost, setCost] = useState(initial ? String(initial.cost_price_usd) : "");
@@ -130,12 +137,22 @@ export default function ProductForm({
           <input id="name" className="input" value={name} onChange={(e) => setName(e.target.value)} required maxLength={120} />
         </div>
         <div>
-          <label className="label" htmlFor="category">
-            {t.products.category}
-          </label>
+          <div className="flex items-center justify-between">
+            <label className="label" htmlFor="category">
+              {t.products.category}
+            </label>
+            <AddOption
+              list="categories"
+              title={t.addOption.category}
+              onAdded={(v) => {
+                addTo(setCategoryList, v);
+                setCategory(v);
+              }}
+            />
+          </div>
           <select id="category" className="input" value={category} onChange={(e) => setCategory(e.target.value)}>
             <option value="">—</option>
-            {withCurrent(categories, category).map((c) => (
+            {withCurrent(categoryList, category).map((c) => (
               <option key={c} value={c}>
                 {c}
               </option>
@@ -177,10 +194,20 @@ export default function ProductForm({
           {rows.map((r) => (
             <li key={r.key} className="grid grid-cols-2 gap-2 rounded-xl border border-line p-3 sm:grid-cols-[1fr_1fr_6rem_8rem_auto] sm:items-end">
               <div>
-                <label className="label">{t.common.size}</label>
+                <div className="flex items-center justify-between">
+                  <label className="label">{t.common.size}</label>
+                  <AddOption
+                    list="sizes"
+                    title={t.addOption.size}
+                    onAdded={(v) => {
+                      addTo(setSizeList, v);
+                      updateRow(r.key, { size: v });
+                    }}
+                  />
+                </div>
                 <select className="input" value={r.size} onChange={(e) => updateRow(r.key, { size: e.target.value })} required>
                   <option value="">—</option>
-                  {withCurrent(sizes, r.size).map((s) => (
+                  {withCurrent(sizeList, r.size).map((s) => (
                     <option key={s} value={s}>
                       {s}
                     </option>
@@ -188,10 +215,20 @@ export default function ProductForm({
                 </select>
               </div>
               <div>
-                <label className="label">{t.common.color}</label>
+                <div className="flex items-center justify-between">
+                  <label className="label">{t.common.color}</label>
+                  <AddOption
+                    list="colors"
+                    title={t.addOption.color}
+                    onAdded={(v) => {
+                      addTo(setColorList, v);
+                      updateRow(r.key, { color: v });
+                    }}
+                  />
+                </div>
                 <select className="input" value={r.color} onChange={(e) => updateRow(r.key, { color: e.target.value })}>
                   <option value="">—</option>
-                  {withCurrent(colors, r.color).map((c) => (
+                  {withCurrent(colorList, r.color).map((c) => (
                     <option key={c} value={c}>
                       {c}
                     </option>
