@@ -32,7 +32,7 @@ export default function ForgotForm({ linkError }: { linkError: boolean }) {
       <p className="text-sm text-muted">{t.forgot.help}</p>
       <div>
         <label htmlFor="email" className="label">
-          {t.login.email}
+          {t.forgot.emailLabel}
         </label>
         <input
           id="email"

@@ -70,6 +70,10 @@ Notes:
    ```
 3. Keep **Authentication → Sign In / Providers → Allow new users to sign up** turned off.
 
+**Roles.** `staff.role` is `owner` (everything) or `cashier` (Sell screen and receipts only). Cashier limits are enforced by the database too: restrictive RLS policies allow cashiers to read the catalogue and add customers, and `record_sale` (security definer, staff-checked) is their only write.
+
+**Usernames.** Staff can sign in with a plain username instead of an email: the app turns `sara` into `sara@staff.misselanor.app` (a domain that receives no mail). Create such an account in Authentication → Users with that address and Auto Confirm, then add it to `staff` with `role = 'cashier'`.
+
 To remove someone, delete their row in `staff` (or the user in Authentication). Passwords are changed in Authentication → Users.
 
 ### Forgot password

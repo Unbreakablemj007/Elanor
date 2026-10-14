@@ -5,11 +5,13 @@ import { NextResponse, type NextRequest } from "next/server";
  * Refresh the Supabase session cookie on every request and return the
  * signed-in user's id (or null). Must run before any redirect decision.
  */
-export async function updateSession(req: NextRequest): Promise<{ response: NextResponse; userId: string | null }> {
+export async function updateSession(
+  req: NextRequest,
+): Promise<{ response: NextResponse; userId: string | null; role: string | null }> {
   let response = NextResponse.next({ request: req });
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
   const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.trim();
-  if (!url || !key) return { response, userId: null };
+  if (!url || !key) return { response, userId: null, role: null };
 
   const supabase = createServerClient(url, key, {
     cookies: {
@@ -27,5 +29,8 @@ export async function updateSession(req: NextRequest): Promise<{ response: NextR
   const {
     data: { user },
   } = await supabase.auth.getUser().catch(() => ({ data: { user: null } }));
-  return { response, userId: user?.id ?? null };
+  if (!user) return { response, userId: null, role: null };
+  // The staff role decides which pages this person may open.
+  const { data } = await supabase.from("staff").select("role").eq("user_id", user.id).maybeSingle();
+  return { response, userId: user.id, role: data?.role ? String(data.role) : null };
 }

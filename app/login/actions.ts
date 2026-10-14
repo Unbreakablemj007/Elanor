@@ -3,12 +3,20 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { blockedFor, recordFailure, recordSuccess } from "@/lib/auth/rateLimit";
+import { cashierMayOpen, loginEmail } from "@/lib/auth/roles";
 import { createClient } from "@/lib/supabase/server";
 import { safeNext } from "@/lib/url";
 import { t } from "@/lib/strings";
 
+// Staff sign in with their email, or with a plain username (see loginEmail).
 const loginSchema = z.object({
-  email: z.string().trim().toLowerCase().email().max(200),
+  email: z
+    .string()
+    .trim()
+    .min(1)
+    .max(200)
+    .transform(loginEmail)
+    .pipe(z.string().email()),
   password: z.string().min(1).max(200),
   next: z.string().max(500).optional(),
 });
@@ -24,37 +32,40 @@ export async function login(_prev: LoginState, formData: FormData): Promise<Logi
   });
   if (!parsed.success) return { error: t.login.invalid, email: typed };
   const { email, password, next } = parsed.data;
+  // Show back what they typed (username or email), not the internal address.
 
   const blockedMs = blockedFor(email);
-  if (blockedMs > 0) return { error: t.login.blocked(Math.ceil(blockedMs / 60000)), email };
+  if (blockedMs > 0) return { error: t.login.blocked(Math.ceil(blockedMs / 60000)), email: typed };
 
   let supabase;
   try {
     supabase = await createClient();
   } catch (err) {
-    return { error: t.login.misconfigured(err instanceof Error ? err.message : String(err)), email };
+    return { error: t.login.misconfigured(err instanceof Error ? err.message : String(err)), email: typed };
   }
 
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error || !data.user) {
     if (error && error.status !== 400 && error.status !== 401 && error.status !== 422) {
       console.error(`[auth] sign-in failed: [${error.status ?? "?"}] ${error.message}`);
-      return { error: error.status === 429 ? t.login.blocked(5) : t.login.unavailable, email };
+      return { error: error.status === 429 ? t.login.blocked(5) : t.login.unavailable, email: typed };
     }
     recordFailure(email);
     const nowBlocked = blockedFor(email);
-    return { error: nowBlocked > 0 ? t.login.blocked(Math.ceil(nowBlocked / 60000)) : t.login.invalid, email };
+    return { error: nowBlocked > 0 ? t.login.blocked(Math.ceil(nowBlocked / 60000)) : t.login.invalid, email: typed };
   }
 
   // A valid Supabase account still needs to be on the staff list.
-  const { data: staff } = await supabase.from("staff").select("user_id").eq("user_id", data.user.id).maybeSingle();
+  const { data: staff } = await supabase.from("staff").select("user_id, role").eq("user_id", data.user.id).maybeSingle();
   if (!staff) {
     await supabase.auth.signOut();
-    return { error: t.login.noAccess, email };
+    return { error: t.login.noAccess, email: typed };
   }
 
   recordSuccess(email);
-  redirect(safeNext(next));
+  // Cashiers go straight to the Sell screen (unless they were heading to a receipt).
+  const target = safeNext(next);
+  redirect(staff.role === "cashier" && !cashierMayOpen(target.split("?")[0]) ? "/sell" : target);
 }
 
 export async function logout(): Promise<void> {

@@ -54,11 +54,11 @@ export const t = {
   login: {
     title: "Welcome back",
     subtitle: "Sign in to manage the shop",
-    email: "Email",
+    email: "Email or username",
     password: "Password",
     submit: "Sign in",
     submitting: "Signing in…",
-    invalid: "Wrong email or password.",
+    invalid: "Wrong username/email or password.",
     noAccess: "This account does not have access to the shop. Ask the owner to add it.",
     blocked: (minutes: number) =>
       `Too many failed attempts. Try again in ${minutes} minute${minutes === 1 ? "" : "s"}.`,
@@ -288,6 +288,7 @@ export const t = {
 
   forgot: {
     title: "Reset your password",
+    emailLabel: "Email",
     help: "Enter the email you sign in with. We will email you a link to choose a new password.",
     submit: "Send reset link",
     sending: "Sending…",
