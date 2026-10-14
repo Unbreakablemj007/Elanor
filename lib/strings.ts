@@ -352,6 +352,16 @@ export const t = {
     unavailable: "The camera could not be started on this device.",
   },
 
+  addOption: {
+    category: "Add a category",
+    size: "Add a size",
+    color: "Add a colour",
+    expenseCategory: "Add an expense category",
+    placeholder: "Name",
+    required: "Enter a name.",
+    tooLong: "Use 40 characters or fewer.",
+  },
+
   credit: {
     prefix: "Developed by",
     name: "MJ Automations",

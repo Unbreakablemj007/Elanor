@@ -4,12 +4,14 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { ErrorBox } from "@/components/ui";
 import { formatInt, formatLbp, formatUsd, parseNumber, round2 } from "@/lib/format";
+import AddOption from "@/components/AddOption";
 import { t } from "@/lib/strings";
 import { createExpense } from "./actions";
 
 export default function ExpenseForm({ categories, rate, today }: { categories: string[]; rate: number; today: string }) {
   const router = useRouter();
   const [date, setDate] = useState(today);
+  const [categoryList, setCategoryList] = useState(categories);
   const [category, setCategory] = useState(categories[0] ?? "");
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
@@ -43,11 +45,21 @@ export default function ExpenseForm({ categories, rate, today }: { categories: s
           <input id="e-date" type="date" className="input" value={date} max={today} onChange={(e) => setDate(e.target.value)} required />
         </div>
         <div>
-          <label className="label" htmlFor="e-cat">
-            {t.expenses.category}
-          </label>
+          <div className="flex items-center justify-between">
+            <label className="label" htmlFor="e-cat">
+              {t.expenses.category}
+            </label>
+            <AddOption
+              list="expense_categories"
+              title={t.addOption.expenseCategory}
+              onAdded={(v) => {
+                setCategoryList((l) => (l.includes(v) ? l : [...l, v]));
+                setCategory(v);
+              }}
+            />
+          </div>
           <select id="e-cat" className="input" value={category} onChange={(e) => setCategory(e.target.value)} required>
-            {categories.map((c) => (
+            {categoryList.map((c) => (
               <option key={c} value={c}>
                 {c}
               </option>

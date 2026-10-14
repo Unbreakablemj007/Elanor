@@ -398,6 +398,7 @@ on conflict (key) do nothing;
 insert into public.lists (list_name, value, sort_order) values
   ('categories','Dresses',1),('categories','Tops',2),('categories','Jeans',3),('categories','Pants',3),
   ('categories','Skirts',4),('categories','Jackets',5),('categories','Accessories',6),
+  ('categories','Shirts',7),('categories','Sets',8),
   ('sizes','XS',1),('sizes','S',2),('sizes','M',3),('sizes','L',4),
   ('sizes','XL',5),('sizes','XXL',6),('sizes','One Size',7),
   ('sizes','25',125),('sizes','26',126),('sizes','27',127),('sizes','28',128),('sizes','29',129),
