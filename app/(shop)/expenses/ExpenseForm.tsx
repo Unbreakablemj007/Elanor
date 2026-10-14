@@ -5,6 +5,7 @@ import { useState, useTransition } from "react";
 import { ErrorBox } from "@/components/ui";
 import { formatInt, formatLbp, formatUsd, parseNumber, round2 } from "@/lib/format";
 import AddOption from "@/components/AddOption";
+import RemoveOption from "@/components/RemoveOption";
 import { t } from "@/lib/strings";
 import { createExpense } from "./actions";
 
@@ -49,14 +50,27 @@ export default function ExpenseForm({ categories, rate, today }: { categories: s
             <label className="label" htmlFor="e-cat">
               {t.expenses.category}
             </label>
-            <AddOption
-              list="expense_categories"
-              title={t.addOption.expenseCategory}
-              onAdded={(v) => {
-                setCategoryList((l) => (l.includes(v) ? l : [...l, v]));
-                setCategory(v);
-              }}
-            />
+            <div className="flex gap-1.5">
+              <RemoveOption
+                list="expense_categories"
+                value={category}
+                listLabel={t.removeOption.expenseCategory}
+                inList={categoryList.includes(category)}
+                onRemoved={(v) => {
+                  const rest = categoryList.filter((x) => x !== v);
+                  setCategoryList(rest);
+                  setCategory(rest[0] ?? "");
+                }}
+              />
+              <AddOption
+                list="expense_categories"
+                title={t.addOption.expenseCategory}
+                onAdded={(v) => {
+                  setCategoryList((l) => (l.includes(v) ? l : [...l, v]));
+                  setCategory(v);
+                }}
+              />
+            </div>
           </div>
           <select id="e-cat" className="input" value={category} onChange={(e) => setCategory(e.target.value)} required>
             {categoryList.map((c) => (

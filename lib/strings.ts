@@ -362,6 +362,19 @@ export const t = {
     tooLong: "Use 40 characters or fewer.",
   },
 
+  removeOption: {
+    button: (label: string) => `Remove this ${label} from the list`,
+    pickFirst: "Select an option first, then tap − to remove it from the list.",
+    title: (label: string) => `Remove ${label}?`,
+    confirm: (value: string, label: string) =>
+      `Remove "${value}" from the ${label} list? Products and records that already use it keep it.`,
+    confirmLabel: "Remove",
+    category: "category",
+    size: "size",
+    color: "colour",
+    expenseCategory: "expense category",
+  },
+
   credit: {
     prefix: "Developed by",
     name: "MJ Automations",
