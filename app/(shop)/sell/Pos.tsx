@@ -249,9 +249,9 @@ export default function Pos({
                     type="button"
                     onClick={() => setPicking(p)}
                     disabled={stock === 0}
-                    className="card flex h-full w-full flex-col gap-2 p-3 text-left transition hover:border-accent disabled:opacity-50"
+                    className="card flex h-full w-full flex-col gap-2 p-2 text-left transition hover:border-accent disabled:opacity-50 sm:p-3"
                   >
-                    <Thumb url={p.image_url} name={p.name} size="h-12 w-12" />
+                    <ProductPhoto url={p.image_url} name={p.name} className="aspect-[4/5] w-full text-4xl" />
                     <span className="line-clamp-2 text-sm font-medium">{p.name}</span>
                     <span className="mt-auto flex w-full items-center justify-between text-sm">
                       <strong>{formatUsd(p.sell_price_usd)}</strong>
@@ -275,8 +275,9 @@ export default function Pos({
             <ul className="divide-y divide-line">
               {lines.map((l) => (
                 <li key={l.variant_id} className="py-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
+                  <div className="flex items-start gap-3">
+                    <Thumb url={l.product.image_url} name={l.product.name} size="h-12 w-12" />
+                    <div className="min-w-0 flex-1">
                       <p className="truncate font-medium">{l.product.name}</p>
                       <p className="text-xs text-muted">
                         {variantLabel(l.variant)} · {formatUsd(l.product.sell_price_usd)}
@@ -415,6 +416,17 @@ export default function Pos({
   );
 }
 
+/** Full-width product photo for the Sell grid; scales with the card on any screen. */
+function ProductPhoto({ url, name, className }: { url: string; name: string; className: string }) {
+  return url ? (
+    <img src={url} alt="" className={`${className} rounded-xl border border-line bg-accent-soft object-cover`} loading="lazy" />
+  ) : (
+    <div className={`${className} flex items-center justify-center rounded-xl bg-accent-soft font-brand text-accent-strong`} aria-hidden="true">
+      {name.slice(0, 1).toUpperCase()}
+    </div>
+  );
+}
+
 function Stepper({ value, max, onChange }: { value: number; max: number; onChange: (n: number) => void }) {
   return (
     <div className="flex items-center gap-1">
@@ -529,6 +541,12 @@ function VariantPickerBody({
 
   return (
     <div className="space-y-4">
+      {product.image_url && (
+        <div className="overflow-hidden rounded-2xl border border-line bg-accent-soft">
+          {/* contain, not cover: the whole garment stays visible */}
+          <img src={product.image_url} alt={product.name} className="mx-auto max-h-[30vh] w-full object-contain sm:max-h-[40vh]" />
+        </div>
+      )}
       <p className="text-lg font-semibold">{formatUsd(product.sell_price_usd)}</p>
       <div>
         <span className="label">{t.sell.pickSize}</span>
